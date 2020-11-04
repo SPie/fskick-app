@@ -14,6 +14,12 @@ use App\Players\PlayerDoctrineRepository;
 use App\Players\PlayerModel;
 use App\Players\PlayerModelFactory;
 use App\Players\PlayerRepository;
+use App\Seasons\SeasonDoctrineModel;
+use App\Seasons\SeasonDoctrineModelFactory;
+use App\Seasons\SeasonDoctrineRepository;
+use App\Seasons\SeasonModel;
+use App\Seasons\SeasonModelFactory;
+use App\Seasons\SeasonRepository;
 use Doctrine\ORM\EntityManager;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Hashing\HashManager;
@@ -48,6 +54,7 @@ final class ModelServiceProvider extends ServiceProvider
     private function bindModels(): self
     {
         $this->app->bind(PlayerModel::class, PlayerDoctrineModel::class);
+        $this->app->bind(SeasonModel::class, SeasonDoctrineModel::class);
 
         return $this;
     }
@@ -58,6 +65,7 @@ final class ModelServiceProvider extends ServiceProvider
     private function bindModelFactories(): self
     {
         $this->app->singleton(PlayerModelFactory::class, PlayerDoctrineModelFactory::class);
+        $this->app->singleton(SeasonModelFactory::class, SeasonDoctrineModelFactory::class);
 
         return $this;
     }
@@ -93,6 +101,10 @@ final class ModelServiceProvider extends ServiceProvider
         $this->app->singleton(
             PlayerRepository::class,
             fn () => new PlayerDoctrineRepository($this->makeDatabaseHandler(PlayerDoctrineModel::class))
+        );
+        $this->app->singleton(
+            SeasonRepository::class,
+            fn () => new SeasonDoctrineRepository($this->makeDatabaseHandler(SeasonDoctrineModel::class))
         );
 
         return $this;

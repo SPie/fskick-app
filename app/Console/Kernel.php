@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Console\Players\CreatePlayer;
+use App\Console\Seasons\CreateSeason;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -15,6 +16,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         CreatePlayer::class,
+
+        CreateSeason::class,
     ];
 
     /**

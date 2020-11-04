@@ -52,6 +52,7 @@ final class CreatePlayer extends Command
         $name = $this->argument(self::ARGUMENT_NAME);
         if ($this->playerNameExists($name)) {
             $this->error(\sprintf('Player with name %s already exists', $name));
+
             return;
         }
 
