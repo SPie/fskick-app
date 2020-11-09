@@ -42,6 +42,27 @@ trait SeasonHelper
         return $this;
     }
 
+    /**
+     * @param SeasonModel|MockInterface $seasonModel
+     * @param bool                      $active
+     *
+     * @return $this
+     */
+    private function mockSeasonModelIsActive(MockInterface $seasonModel, bool $active): self
+    {
+        $seasonModel
+            ->shouldReceive('isActive')
+            ->andReturn($active);
+
+        return $this;
+    }
+
+    /**
+     * @param int   $times
+     * @param array $attributes
+     *
+     * @return SeasonModel[]|Collection
+     */
     private function createSeasonEntities(int $times = 1, array $attributes = []): Collection
     {
         if ($times = 1) {
@@ -105,6 +126,21 @@ trait SeasonHelper
             ->shouldReceive('getSeasonByName')
             ->with($name)
             ->andThrow($season);
+
+        return $this;
+    }
+
+    /**
+     * @param SeasonManager|MockInterface $seasonManager
+     * @param SeasonModel[]|Collection    $seasons
+     *
+     * @return $this
+     */
+    private function mockSeasonManagerGetSeasons(MockInterface $seasonManager, Collection $seasons): self
+    {
+        $seasonManager
+            ->shouldReceive('getSeasons')
+            ->andReturn($seasons);
 
         return $this;
     }

@@ -211,4 +211,19 @@ trait ModelHelper
 
         return $this;
     }
+
+    /**
+     * @param Repository|MockInterface $repository
+     * @param Collection               $collection
+     *
+     * @return $this
+     */
+    private function mockRepositoryFindAll(MockInterface $repository, Collection $collection): self
+    {
+        $repository
+            ->shouldReceive('findAll')
+            ->andReturn($collection);
+
+        return $this;
+    }
 }

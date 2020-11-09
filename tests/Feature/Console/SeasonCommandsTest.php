@@ -61,5 +61,19 @@ final class SeasonCommandsTest extends FeatureTestCase
             ->assertExitCode(0);
     }
 
+    /**
+     * @return void
+     */
+    public function testListSeasons(): void
+    {
+        $season = $this->createSeasonEntities()->first();
+
+        $this->artisan('season:list')
+            ->expectsTable(['Name', 'Active'], [[$season->getName(), $season->isActive()]])
+            ->assertExitCode(0);
+
+        $this->expectedTables = [];
+    }
+
     //endregion
 }

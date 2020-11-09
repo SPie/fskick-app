@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Players\CreatePlayer;
 use App\Console\Seasons\CreateSeason;
+use App\Console\Seasons\ListSeason;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -18,6 +19,7 @@ class Kernel extends ConsoleKernel
         CreatePlayer::class,
 
         CreateSeason::class,
+        ListSeason::class,
     ];
 
     /**

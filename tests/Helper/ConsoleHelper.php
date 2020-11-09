@@ -2,11 +2,14 @@
 
 namespace Tests\Helper;
 
+use App\Console\TableHelperFactory;
 use Illuminate\Console\Command;
 use Illuminate\Console\OutputStyle;
 use Mockery as m;
 use Mockery\MockInterface;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Trait ConsoleHelper
@@ -77,6 +80,58 @@ trait ConsoleHelper
             ->shouldHaveReceived('writeln')
             ->with($line, $verbosity)
             ->once();
+
+        return $this;
+    }
+
+    /**
+     * @return Table|MockInterface
+     */
+    private function createTableHelper(): Table
+    {
+        return m::spy(Table::class);
+    }
+
+    /**
+     * @param Table|MockInterface $tableHelper
+     *
+     * @return $this
+     */
+    private function assertTableHelperRender(MockInterface $tableHelper): self
+    {
+        $tableHelper->shouldHaveReceived('render')->once();
+
+        return $this;
+    }
+
+    /**
+     * @return TableHelperFactory|MockInterface
+     */
+    private function createTableHelperFactory(): TableHelperFactory
+    {
+        return m::spy(TableHelperFactory::class);
+    }
+
+    /**
+     * @param MockInterface   $tableHelperFactory
+     * @param Table           $tableHelper
+     * @param OutputInterface $output
+     * @param array           $headers
+     * @param array           $rows
+     *
+     * @return $this
+     */
+    private function mockTableRendererRenderCreate(
+        MockInterface $tableHelperFactory,
+        Table $tableHelper,
+        OutputInterface $output,
+        array $headers,
+        array $rows
+    ): self {
+        $tableHelperFactory
+            ->shouldReceive('create')
+            ->with($output, $headers, $rows)
+            ->andReturn($tableHelper);
 
         return $this;
     }

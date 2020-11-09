@@ -3,6 +3,7 @@
 namespace App\Seasons;
 
 use App\Models\Exceptions\ModelNotFoundException;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * Class SeasonManager
@@ -59,6 +60,14 @@ class SeasonManager
         $season = $this->getSeasonModelFactory()->create($name);
 
         return $this->getSeasonRepository()->save($season);
+    }
+
+    /**
+     * @return SeasonModel[]|Collection
+     */
+    public function getSeasons(): Collection
+    {
+        return $this->getSeasonRepository()->findAll();
     }
 
     /**

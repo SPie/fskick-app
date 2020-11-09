@@ -6,6 +6,7 @@ use App\Models\Exceptions\ModelNotFoundException;
 use App\Seasons\SeasonManager;
 use App\Seasons\SeasonModelFactory;
 use App\Seasons\SeasonRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Tests\Helper\ModelHelper;
 use Tests\Helper\SeasonHelper;
 use Tests\TestCase;
@@ -76,6 +77,21 @@ final class SeasonManagerTest extends TestCase
         $this->expectException(ModelNotFoundException::class);
 
         $seasonManager->getSeasonByName($name);
+    }
+
+    /**
+     * @return void
+     */
+    public function testGetSeasons(): void
+    {
+        $season = $this->createSeasonModel();
+        $seasonRepository = $this->createSeasonRepository();
+        $this->mockRepositoryFindAll($seasonRepository, new ArrayCollection([$season]));
+
+        $this->assertEquals(
+            new ArrayCollection([$season]),
+            $this->getSeasonManager($seasonRepository)->getSeasons()
+        );
     }
 
     //endregion
