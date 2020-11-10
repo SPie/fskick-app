@@ -71,8 +71,6 @@ final class SeasonCommandsTest extends FeatureTestCase
         $this->artisan('season:list')
             ->expectsTable(['Name', 'Active'], [[$season->getName(), $season->isActive()]])
             ->assertExitCode(0);
-
-        $this->expectedTables = [];
     }
 
     //endregion
