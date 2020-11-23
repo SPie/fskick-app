@@ -21,4 +21,19 @@ final class SeasonDoctrineRepository extends AbstractDoctrineRepository implemen
     {
         return $this->findOneBy([SeasonModel::PROPERTY_NAME => $name]);
     }
+
+    /**
+     * @return SeasonRepository
+     */
+    public function deactivateActiveSeason(): SeasonRepository
+    {
+        $activeSeasons = $this->findBy([SeasonModel::PROPERTY_ACTIVE => true]);
+        foreach ($activeSeasons as $activeSeason) {
+            $this->save($activeSeason->setActive(false), false);
+        }
+
+        $this->flush();
+
+        return $this;
+    }
 }

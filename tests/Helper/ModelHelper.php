@@ -110,11 +110,16 @@ trait ModelHelper
      * @param DatabaseHandler|MockInterface $databaseHandler
      * @param Model                         $model
      * @param bool|null                     $flush
+     * @param int                           $times
      *
      * @return $this
      */
-    private function mockDatabaseHandlerSave(MockInterface $databaseHandler, Model $model, bool $flush = null): self
-    {
+    private function mockDatabaseHandlerSave(
+        MockInterface $databaseHandler,
+        Model $model,
+        bool $flush = null,
+        int $times = 1
+    ): self {
         $arguments = [$model];
         if ($flush !== null) {
             $arguments[] = $flush;
@@ -123,7 +128,8 @@ trait ModelHelper
         $databaseHandler
             ->shouldReceive('save')
             ->withArgs($arguments)
-            ->andReturn($model);
+            ->andReturn($model)
+            ->times($times);
 
         return $this;
     }
@@ -169,14 +175,15 @@ trait ModelHelper
 
     /**
      * @param DatabaseHandler|MockInterface $databaseHandler
+     * @param int                           $times
      *
      * @return $this
      */
-    private function assertDatabaseHandlerFlush(MockInterface $databaseHandler): self
+    private function assertDatabaseHandlerFlush(MockInterface $databaseHandler, int $times = 1): self
     {
         $databaseHandler
             ->shouldHaveReceived('flush')
-            ->once();
+            ->times($times);
 
         return $this;
     }
@@ -184,15 +191,17 @@ trait ModelHelper
     /**
      * @param Repository|MockInterface $repository
      * @param Model                    $model
+     * @param int                      $times
      *
      * @return $this
      */
-    private function mockRepositorySave(MockInterface $repository, Model $model): self
+    private function mockRepositorySave(MockInterface $repository, Model $model, int $times = 1): self
     {
         $repository
             ->shouldReceive('save')
             ->with($model)
-            ->andReturn($model);
+            ->andReturn($model)
+            ->times($times);
 
         return $this;
     }

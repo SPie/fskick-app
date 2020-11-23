@@ -4,6 +4,7 @@ namespace Tests\Unit\Seasons;
 
 use App\Models\Exceptions\ModelNotFoundException;
 use App\Seasons\SeasonManager;
+use App\Seasons\SeasonModel;
 use App\Seasons\SeasonModelFactory;
 use App\Seasons\SeasonRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -92,6 +93,42 @@ final class SeasonManagerTest extends TestCase
             new ArrayCollection([$season]),
             $this->getSeasonManager($seasonRepository)->getSeasons()
         );
+    }
+
+    /**
+     * @return array
+     */
+    private function setUpActivateSeasonTest(): array
+    {
+        $season = $this->createSeasonModel();
+        $season
+            ->shouldReceive('setActive')
+            ->with(true)
+            ->andReturn($season)
+            ->once();
+        $seasonRepository = $this->createSeasonRepository();
+        $seasonRepository
+            ->shouldReceive('deactivateActiveSeason')
+            ->andReturn($seasonRepository)
+            ->once();
+        $this->mockRepositorySave($seasonRepository, $season);
+        $seasonManager = $this->getSeasonManager($seasonRepository);
+
+        return [$seasonManager, $season];
+    }
+
+    /**
+     * @return void
+     */
+    public function testActivateSeason(): void
+    {
+        /**
+         * @var SeasonManager $seasonManager
+         * @var SeasonModel   $season
+         */
+        [$seasonManager, $season] = $this->setUpActivateSeasonTest();
+
+        $this->assertEquals($season, $seasonManager->activateSeason($season));
     }
 
     //endregion

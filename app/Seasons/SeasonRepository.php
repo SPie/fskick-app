@@ -26,4 +26,9 @@ interface SeasonRepository extends Repository
      * @return SeasonModel|null
      */
     public function findOneByName(string $name): ?SeasonModel;
+
+    /**
+     * @return $this
+     */
+    public function deactivateActiveSeason(): self;
 }

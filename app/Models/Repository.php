@@ -38,7 +38,7 @@ interface Repository
      *
      * @return Collection
      */
-    public function findBy(array $criteria = [], array $orderBy = null, int $limit = null, int $offset = null): Collection;
+    public function findBy(array $criteria = [], array $orderBy = [], int $limit = null, int $offset = null): Collection;
 
     /**
      * @param Model $model
@@ -59,5 +59,5 @@ interface Repository
     /**
      * @return $this
      */
-    public function flush(): self;
+    public function flush();
 }

@@ -73,5 +73,46 @@ final class SeasonCommandsTest extends FeatureTestCase
             ->assertExitCode(0);
     }
 
+    /**
+     * @return array
+     */
+    private function setUpActivateSeasonTest(): array
+    {
+        $activeSeason = $this->createSeasonEntities(1, ['active' => true])->first();
+        $inactiveSeason = $this->createSeasonEntities(2, ['active' => false])->first();
+
+        return [$activeSeason, $inactiveSeason];
+    }
+
+    /**
+     * @return void
+     */
+    public function testActivateSeason(): void
+    {
+        /**
+         * @var SeasonModel $activeSeason
+         * @var SeasonModel $inactiveSeason
+         */
+        [$activeSeason, $inactiveSeason] = $this->setUpActivateSeasonTest();
+
+        $this->artisan('season:activate', ['name' => $inactiveSeason->getName()])
+            ->expectsOutput(\sprintf('Season %s is active now', $inactiveSeason->getName()))
+            ->assertExitCode(0);
+
+        $this->assertTrue($inactiveSeason->isActive());
+        $this->assertFalse($activeSeason->isActive());
+    }
+
+    /**
+     * @return void
+     */
+    public function testActivateSeasonWithoutFoundSeason(): void
+    {
+        $name = $this->getFaker()->word;
+        $this->artisan('season:activate', ['name' => $name])
+            ->expectsOutput(\sprintf('Season with name %s doesn\'t exist', $name))
+            ->assertExitCode(0);
+    }
+
     //endregion
 }

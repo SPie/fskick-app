@@ -84,4 +84,16 @@ class SeasonManager
 
         return $season;
     }
+
+    /**
+     * @param SeasonModel $season
+     *
+     * @return SeasonModel
+     */
+    public function activateSeason(SeasonModel $season): SeasonModel
+    {
+        return $this->getSeasonRepository()
+            ->deactivateActiveSeason()
+            ->save($season->setActive(true));
+    }
 }

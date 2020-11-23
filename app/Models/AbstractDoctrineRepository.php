@@ -70,7 +70,7 @@ abstract class AbstractDoctrineRepository implements Repository
      *
      * @return Collection
      */
-    public function findBy(array $criteria = [], array $orderBy = null, int $limit = null, int $offset = null): Collection
+    public function findBy(array $criteria = [], array $orderBy = [], int $limit = null, int $offset = null): Collection
     {
         return $this->getDatabaseHandler()->loadAll($criteria, $orderBy, $limit, $offset);
     }
@@ -102,7 +102,7 @@ abstract class AbstractDoctrineRepository implements Repository
     /**
      * @return $this|Repository
      */
-    public function flush(): Repository
+    public function flush()
     {
         $this->getDatabaseHandler()->flush();
 
