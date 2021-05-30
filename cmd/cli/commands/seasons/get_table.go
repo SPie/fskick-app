@@ -73,12 +73,12 @@ func (tableCommand *getTableCommand) getSeason(args []string) (games.Season, err
 	if len(args) > 0 {
 		season, err := tableCommand.gamesManager.GetSeasonByName(args[0])
 
-		return *season, err
+		return season, err
 	}
 
 	season, err := tableCommand.gamesManager.ActiveSeason()
 
-	return *season, err
+	return season, err
 }
 
 func getSortName(cmd *cobra.Command) (string, error) {

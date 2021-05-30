@@ -13,17 +13,17 @@ import (
 
 type Player struct {
 	db.Model
-	Name        string `gorm:"unique;not null"`
-	Attendances *[]Attendance
+	Name        string        `gorm:"unique;not null" json:"name"`
+	Attendances *[]Attendance `json:"attendances"`
 }
 
 type PlayerStats struct {
 	Player
-	Position    int
-	PointsRatio float32
-	Points      int
-	Wins        int
-	Games       int
+	Position    int     `json:"position"`
+	PointsRatio float32 `json:"pointsRatio"`
+	Points      int     `json:"points"`
+	Wins        int     `json:"wins"`
+	Games       int     `json:"games"`
 }
 
 type Team *[]Player
@@ -388,11 +388,11 @@ func (repository *playerRepository) AllPlayersWithAttendances() (*[]Player, erro
 
 type Attendance struct {
 	db.Model
-	Win      bool
-	PlayerID uint
-	Player   *Player
-	GameID   uint
-	Game     *games.Game
+	Win      bool        `json:"win"`
+	PlayerID uint        `json:"-"`
+	Player   *Player     `json:"-"`
+	GameID   uint        `json:"-"`
+	Game     *games.Game `json:"game"`
 }
 
 type AttendancesRepository interface {

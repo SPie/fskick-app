@@ -34,7 +34,7 @@ func (getSeasonsCommand *getSeasonsCommand) getSeasons(cmd *cobra.Command, args 
 	}
 
 	seasonsTable := [][]string{}
-	for _, season := range *seasons {
+	for _, season := range seasons {
 		active := ""
 		if season.Active {
 			active = "Active"

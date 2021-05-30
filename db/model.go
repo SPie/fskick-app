@@ -1,13 +1,18 @@
 package db
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Model struct {
-	gorm.Model
-	UUID string `gorm:"unique;not null"`
+	ID        uint           `gorm:"primarykey" json:"-"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	UUID      string         `gorm:"unique;not null" json:"uuid"`
 }
 
 func (model *Model) BeforeCreate(db *gorm.DB) error {
