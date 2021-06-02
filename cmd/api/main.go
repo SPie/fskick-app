@@ -40,7 +40,7 @@ func main() {
 	attentanceRepository := players.NewAttendancesRepository(connectionHandler)
 	playersManager := players.NewManager(playersRepository, attentanceRepository)
 
-	err = api.SetUp(playersManager, gamesManager).Run()
+	err = api.SetUp(playersManager, gamesManager).Run(os.Getenv("API_HOST"))
 	if err != nil {
 		log.Fatal(err)
 	}
