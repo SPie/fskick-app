@@ -26,7 +26,10 @@ func GetTable(playersManager players.Manager, gamesManager g.Manager) gin.Handle
 			return
 		}
 
-		playerStats, err := playersManager.GetPlayerStats(season, playersManager.GetSortFunction(""))
+		playerStats, err := playersManager.GetPlayerStats(
+			season,
+			playersManager.GetSortFunction(c.DefaultQuery("sort", players.SortByPointsRatio)),
+		)
 		if err != nil {
 			c.Error(err)
 			return

@@ -273,7 +273,14 @@ var sortByWins = func(playersStats *[]PlayerStats) {
 
 var sortByGames = func(playersStats *[]PlayerStats) {
 	sort.Slice(*playersStats, func(p, q int) bool {
-		return (*playersStats)[p].Games > (*playersStats)[q].Games
+		if (*playersStats)[p].Games > (*playersStats)[q].Games {
+			return true
+		}
+		if (*playersStats)[p].Games < (*playersStats)[q].Games {
+			return false
+		}
+
+		return (*playersStats)[p].Wins > (*playersStats)[q].Wins
 	})
 
 	currentPositionGames := (*playersStats)[0].Games
