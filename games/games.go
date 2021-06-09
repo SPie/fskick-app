@@ -15,6 +15,7 @@ type Manager interface {
 	CreateGame() (*Game, error)
 	ActiveSeason() (Season, error)
 	GetSeasonByName(name string) (Season, error)
+	GetSeasonByUuid(uuid string) (Season, error)
 	GetGamesCount() (int, error)
 }
 
@@ -108,6 +109,10 @@ func (manager manager) GetGamesCount() (int, error) {
 	return manager.gameRepository.Count()
 }
 
+func (manager manager) GetSeasonByUuid(uuid string) (Season, error) {
+	return manager.seasonsRepository.FindSeasonByUuid(uuid)
+}
+
 type Game struct {
 	db.Model
 	SeasonID uint    `json:"-"`
@@ -169,6 +174,7 @@ type SeasonsRepository interface {
 	Find(condition *Season) (*[]Season, error)
 	FindActiveSeason() (Season, error)
 	FindSeasonByName(name string) (Season, error)
+	FindSeasonByUuid(uuid string) (Season, error)
 	GetAll() ([]Season, error)
 }
 
@@ -192,6 +198,17 @@ func (repository *seasonsRepository) FindSeasonByName(name string) (Season, erro
 	season := &Season{}
 
 	err := repository.connectionHandler.Preload("Games").FindOne(season, &Season{Name: name})
+	if err != nil {
+		return Season{}, err
+	}
+
+	return *season, nil
+}
+
+func (repository *seasonsRepository) FindSeasonByUuid(uuid string) (Season, error) {
+	season := &Season{}
+
+	err := repository.connectionHandler.Preload("Games").FindOne(season, &Season{Model: db.Model{UUID: uuid}})
 	if err != nil {
 		return Season{}, err
 	}

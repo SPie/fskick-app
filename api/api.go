@@ -4,7 +4,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	gh "github.com/spie/fskick/api/handlers/games"
+	gamesHandlers "github.com/spie/fskick/api/handlers/games"
+	playersHandlers "github.com/spie/fskick/api/handlers/players"
 	"github.com/spie/fskick/games"
 	"github.com/spie/fskick/players"
 )
@@ -16,8 +17,11 @@ func SetUp(playersManager players.Manager, gamesManager games.Manager) *gin.Engi
 
 	api := engine.Group("/api")
 	{
-		api.GET("/seasons", gh.GetSeasons(gamesManager))
-		api.GET("/seasons/table", gh.GetTable(playersManager, gamesManager))
+		api.GET("/seasons", gamesHandlers.GetSeasons(gamesManager))
+		api.GET("/seasons/table", gamesHandlers.GetTable(playersManager, gamesManager))
+		api.GET("/seasons/table/:season", gamesHandlers.GetTable(playersManager, gamesManager))
+
+		api.GET("/players", playersHandlers.GetPlayers(playersManager))
 	}
 
 	return engine

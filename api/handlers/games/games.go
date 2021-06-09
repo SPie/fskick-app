@@ -20,7 +20,7 @@ func GetSeasons(gamesManager g.Manager) gin.HandlerFunc {
 
 func GetTable(playersManager players.Manager, gamesManager g.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		season, err := gamesManager.ActiveSeason()
+		season, err := getSeason(gamesManager, c.Param("season"))
 		if err != nil {
 			c.Error(err)
 			return
@@ -37,4 +37,12 @@ func GetTable(playersManager players.Manager, gamesManager g.Manager) gin.Handle
 
 		c.JSON(200, gin.H{"season": season, "playerStats": playerStats})
 	}
+}
+
+func getSeason(gamesManager g.Manager, seasonUuid string) (g.Season, error) {
+	if seasonUuid == "" {
+		return gamesManager.ActiveSeason()
+	}
+
+	return gamesManager.GetSeasonByUuid(seasonUuid)
 }
