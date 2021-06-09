@@ -33,6 +33,7 @@ type Manager interface {
 	CreateAttendances(game *games.Game, winnerNames []string, loserNames []string) (Team, Team, error)
 	GetPlayerStats(season games.Season, sortFunction sortFunction) (*[]PlayerStats, error)
 	GetSortFunction(sortName string) sortFunction
+	SearchPlayers(query string) (*[]Player, error)
 }
 
 type manager struct {
@@ -298,6 +299,10 @@ var sortByGames = func(playersStats *[]PlayerStats) {
 	}
 }
 
+func (manager manager) SearchPlayers(query string) (*[]Player, error) {
+	return manager.playerRepository.SearchPlayers(query)
+}
+
 type PlayerRepository interface {
 	db.Repository
 	Save(player *Player) error
@@ -305,6 +310,7 @@ type PlayerRepository interface {
 	FindPlayersByNames(names []string) (*[]Player, error)
 	FindPlayersPlayedInSeason(season games.Season) (*[]Player, error)
 	AllPlayersWithAttendances() (*[]Player, error)
+	SearchPlayers(query string) (*[]Player, error)
 }
 
 type playerRepository struct {
@@ -389,6 +395,18 @@ func (repository *playerRepository) AllPlayersWithAttendances() (*[]Player, erro
 	if err != nil {
 		return &[]Player{}, err
 	}
+
+	return players, nil
+}
+
+func (repository *playerRepository) SearchPlayers(query string) (*[]Player, error) {
+	players := &[]Player{}
+
+	err := repository.connectionHandler.Find(players, "name LIKE ?", fmt.Sprintf("%%%s%%", query))
+	if err != nil {
+		return &[]Player{}, err
+	}
+	fmt.Println(len(*players))
 
 	return players, nil
 }
