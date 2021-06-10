@@ -91,8 +91,8 @@ func getSortName(cmd *cobra.Command) (string, error) {
 		return players.SortByPointsRatio, nil
 	}
 
-	if sortName != players.SortByPointsRatio && sortName != players.SortByWins && sortName != players.SortByGames {
-		return "", errors.New("Sort flag has to be pointsRatio, games or wins")
+	if sortName != players.SortByPointsRatio && sortName != players.SortByWins && sortName != players.SortByGames && sortName != players.SortByWinRatio {
+		return "", errors.New("Sort flag has to be pointsRatio, games, wins or winRatio")
 	}
 
 	return sortName, nil

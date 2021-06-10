@@ -207,6 +207,8 @@ func (manager manager) GetSortFunction(sortName string) sortFunction {
 		return sortByWins
 	case SortByGames:
 		return sortByGames
+	case SortByWinRatio:
+		return sortByWinRatio
 	}
 
 	return sortByPointsRatio
@@ -217,6 +219,7 @@ type sortFunction func(playersStats *[]PlayerStats)
 var (
 	SortByPointsRatio = "pointsRatio"
 	SortByWins        = "wins"
+	SortByWinRatio    = "winRatio"
 	SortByGames       = "games"
 )
 
@@ -266,6 +269,36 @@ var sortByWins = func(playersStats *[]PlayerStats) {
 		if playerStats.Wins < currentPositionWins {
 			position = playersCount
 			currentPositionWins = playerStats.Wins
+		}
+
+		(*playersStats)[i].Position = position
+	}
+}
+
+var sortByWinRatio = func(playersStats *[]PlayerStats) {
+	sort.Slice(*playersStats, func(p, q int) bool {
+		winRatioP := float32((*playersStats)[p].Wins) / float32((*playersStats)[p].Games)
+		winRatioQ := float32((*playersStats)[q].Wins) / float32((*playersStats)[q].Games)
+
+		if winRatioP > winRatioQ {
+			return true
+		}
+		if winRatioP < winRatioQ {
+			return false
+		}
+		return (*playersStats)[p].Games > (*playersStats)[q].Games
+	})
+
+	currentPositionWinRatio := float32((*playersStats)[0].Wins) / float32((*playersStats)[0].Games)
+	(*playersStats)[0].Position = 1
+	position := 1
+	playersCount := 0
+	for i, playerStats := range *playersStats {
+		playersCount++
+		playerWinRatio := float32(playerStats.Wins) / float32(playerStats.Games)
+		if playerWinRatio < currentPositionWinRatio {
+			position = playersCount
+			currentPositionWinRatio = playerWinRatio
 		}
 
 		(*playersStats)[i].Position = position
