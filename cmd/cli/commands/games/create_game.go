@@ -36,16 +36,20 @@ func (createGameCommand *createGameCommand) CreateGame(cmd *cobra.Command, args 
 	winnerNames, _ := cmd.Flags().GetString("winners")
 	loserNames, _ := cmd.Flags().GetString("losers")
 
+	winners, losers, err := createGameCommand.playersManager.GetTeamsByNames(
+		getPlayerNamesFromFlag(winnerNames),
+		getPlayerNamesFromFlag(loserNames),
+	)
+	if err != nil {
+		return err
+	}
+
 	game, err := createGameCommand.gamesManager.CreateGame()
 	if err != nil {
 		return err
 	}
 
-	winnersTeam, losersTeam, err := createGameCommand.playersManager.CreateAttendances(
-		game,
-		getPlayerNamesFromFlag(winnerNames),
-		getPlayerNamesFromFlag(loserNames),
-	)
+	winnersTeam, losersTeam, err := createGameCommand.playersManager.CreateAttendances(game, winners, losers)
 	if err != nil {
 		return err
 	}

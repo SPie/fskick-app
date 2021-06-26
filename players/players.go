@@ -30,7 +30,8 @@ type Team *[]Player
 
 type Manager interface {
 	CreatePlayer(name string) (*Player, error)
-	CreateAttendances(game *games.Game, winnerNames []string, loserNames []string) (Team, Team, error)
+	GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error)
+	CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error)
 	GetPlayerStats(season games.Season, sortFunction sortFunction) (*[]PlayerStats, error)
 	GetSortFunction(sortName string) sortFunction
 	SearchPlayers(query string) (*[]Player, error)
@@ -64,32 +65,13 @@ func (manager manager) CreatePlayer(name string) (*Player, error) {
 	return player, nil
 }
 
-func (manager manager) CreateAttendances(game *games.Game, winnerNames []string, loserNames []string) (Team, Team, error) {
-	winners, losers, err := manager.getTeams(winnerNames, loserNames)
+func (manager manager) GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error) {
+	winners, err := manager.getTeamByNames(winnerNames)
 	if err != nil {
 		return &[]Player{}, &[]Player{}, err
 	}
 
-	attendances := append(*createAttendances(game, winners, true), *createAttendances(game, losers, false)...)
-	if len(attendances) < 1 {
-		return &[]Player{}, &[]Player{}, errors.New("No attendances for game")
-	}
-
-	err = manager.attendancesRepository.Create(&attendances)
-	if err != nil {
-		return &[]Player{}, &[]Player{}, err
-	}
-
-	return winners, losers, err
-}
-
-func (manager manager) getTeams(winnerNames []string, loserNames []string) (Team, Team, error) {
-	winners, err := manager.getTeam(winnerNames)
-	if err != nil {
-		return &[]Player{}, &[]Player{}, err
-	}
-
-	losers, err := manager.getTeam(loserNames)
+	losers, err := manager.getTeamByNames(loserNames)
 	if err != nil {
 		return &[]Player{}, &[]Player{}, err
 	}
@@ -97,7 +79,7 @@ func (manager manager) getTeams(winnerNames []string, loserNames []string) (Team
 	return winners, losers, nil
 }
 
-func (manager manager) getTeam(names []string) (Team, error) {
+func (manager manager) getTeamByNames(names []string) (Team, error) {
 	if len(names) < 1 {
 		return &[]Player{}, nil
 	}
@@ -112,6 +94,20 @@ func (manager manager) getTeam(names []string) (Team, error) {
 	}
 
 	return players, nil
+}
+
+func (manager manager) CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error) {
+	attendances := append(*createAttendances(game, winners, true), *createAttendances(game, losers, false)...)
+	if len(attendances) < 1 {
+		return &[]Player{}, &[]Player{}, errors.New("No attendances for game")
+	}
+
+	err := manager.attendancesRepository.Create(&attendances)
+	if err != nil {
+		return &[]Player{}, &[]Player{}, err
+	}
+
+	return winners, losers, err
 }
 
 func getIncorrectPlayerNames(names []string, players *[]Player) []string {
