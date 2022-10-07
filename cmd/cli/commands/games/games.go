@@ -15,7 +15,7 @@ type gamesCommand struct {
 	cc *cobra.Command
 }
 
-func NewGamesCommand(gamesManager g.Manager, playersManager players.Manager) GamesCommand {
+func NewGamesCommand(gamesManager g.Manager, playersManager players.AttendanceCreator) GamesCommand {
 	gamesCommand := gamesCommand{cc: &cobra.Command{
 		Use:   "games",
 		Short: "Commands to handle games",
