@@ -22,6 +22,7 @@ func SetUp(playersManager players.Manager, gamesManager games.Manager) *gin.Engi
 		api.GET("/seasons/table/:season", gamesHandlers.GetTable(playersManager, gamesManager))
 
 		api.GET("/players", playersHandlers.GetPlayers(playersManager))
+		api.GET("/players/:player/streak", playersHandlers.GetPlayerAttendances(playersManager))
 
 		api.GET("/games/count", gamesHandlers.GetGamesCount(gamesManager))
 	}

@@ -128,6 +128,7 @@ type AttendancesRepository interface {
 	db.Repository
 	Save(attendance *Attendance) error
 	FindAttendancesForSeason(season *games.Season) (*[]Attendance, error)
+	FindAttendancesForPlayer(player *Player) (*[]Attendance, error)
 	Create(attendances *[]Attendance) error
 }
 
@@ -146,6 +147,16 @@ func (repository *attendancesRepository) Save(attendance *Attendance) error {
 func (repository *attendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.Joins("Player").Joins("Game").Find(attendances, &Attendance{Game: &games.Game{Season: season}})
+	if err != nil {
+		return &[]Attendance{}, err
+	}
+
+	return attendances, nil
+}
+
+func (repository *attendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+	attendances := &[]Attendance{}
+	err := repository.connectionHandler.Joins("Player").Find(attendances, &Attendance{Player: player})
 	if err != nil {
 		return &[]Attendance{}, err
 	}

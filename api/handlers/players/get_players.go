@@ -16,7 +16,23 @@ func GetPlayers(playersManager p.PlayerStatsCalculator) gin.HandlerFunc {
 
 		playersManager.GetSortFunction(c.DefaultQuery("sort", p.SortByPointsRatio))(playerStats)
 
-		c.JSON(200, gin.H{"playerStats": playerStats})
+		name := c.DefaultQuery("name", "")
+		if name == "" {
+			c.JSON(200, gin.H{"playerStats": playerStats})
+			return
+		}
+
+		c.JSON(200, gin.H{"playerStats": filterPlayersStatsForName(playerStats, name)})
 		return
 	}
+}
+
+func filterPlayersStatsForName(playersStats *[]p.PlayerStats, name string) *[]p.PlayerStats {
+	for _, playerStats := range *playersStats {
+		if playerStats.Player.Name == name {
+			return &[]p.PlayerStats{playerStats}
+		}
+	}
+
+	return &[]p.PlayerStats{}
 }

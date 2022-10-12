@@ -35,6 +35,7 @@ type PlayerCreator interface {
 type PlayerStatsCalculator interface {
 	GetPlayersStats(season games.Season) (*[]PlayerStats, error)
 	GetSortFunction(sortName string) sortFunction
+	GetPlayerAttendances(name string) (*[]Attendance, error)
 }
 
 type AttendanceCreator interface {
@@ -218,6 +219,15 @@ func (manager manager) GetSortFunction(sortName string) sortFunction {
 	}
 
 	return sortByPointsRatio
+}
+
+func (manager manager) GetPlayerAttendances(name string) (*[]Attendance, error) {
+	player, err := manager.playerRepository.FindPlayerByName(name)
+	if err != nil {
+		return &[]Attendance{}, err
+	}
+
+	return manager.attendancesRepository.FindAttendancesForPlayer(player)
 }
 
 type sortFunction func(playersStats *[]PlayerStats)
