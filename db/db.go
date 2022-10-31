@@ -22,6 +22,7 @@ type ConnectionHandler interface {
 	Joins(modelName string) ConnectionHandler
 	Count(model interface{}) (int, error)
 	AutoMigrate(model interface{})
+	Exec(statement string, parameters ...interface{}) error
 	Close() error
 	SetDebug()
 }
@@ -159,6 +160,12 @@ func (connectionHandler *connectionHandler) Count(model interface{}) (int, error
 
 func (connectionHandler *connectionHandler) AutoMigrate(model interface{}) {
 	connectionHandler.connection.AutoMigrate(model)
+}
+
+func (connectionHandler *connectionHandler) Exec(statement string, parameters ...interface{}) error {
+	connectionHandler.connection.Exec(statement, parameters...)
+
+	return nil
 }
 
 func (connectionHandler *connectionHandler) Close() error {

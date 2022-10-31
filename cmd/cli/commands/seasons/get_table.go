@@ -8,7 +8,6 @@ import (
 
 	"github.com/spie/fskick/cli"
 	"github.com/spie/fskick/games"
-	"github.com/spie/fskick/html"
 	"github.com/spie/fskick/players"
 )
 
@@ -16,11 +15,10 @@ type getTableCommand struct {
 	cc             *cobra.Command
 	gamesManager   games.Manager
 	playersManager players.Manager
-	htmlWriter     html.HtmlWriter
 }
 
-func newGetTableCommand(gamesManager games.Manager, playersManager players.Manager, htmlWriter html.HtmlWriter) *getTableCommand {
-	getTableCommand := &getTableCommand{gamesManager: gamesManager, playersManager: playersManager, htmlWriter: htmlWriter}
+func newGetTableCommand(gamesManager games.Manager, playersManager players.Manager) *getTableCommand {
+	getTableCommand := &getTableCommand{gamesManager: gamesManager, playersManager: playersManager}
 
 	cc := &cobra.Command{
 		Use:   "table",
@@ -30,7 +28,6 @@ func newGetTableCommand(gamesManager games.Manager, playersManager players.Manag
 	}
 
 	cc.Flags().StringP("sort", "s", "", "Table sort by")
-	cc.Flags().BoolP("html", "H", false, "Print table to HTML file")
 
 	getTableCommand.cc = cc
 
@@ -57,11 +54,6 @@ func (tableCommand *getTableCommand) getTable(cmd *cobra.Command, args []string)
 
 	head := cli.CreateTableHead(gamesCount, playerStats)
 	tableEntries := cli.CreateTableEntries(gamesCount, playerStats)
-
-	err = tableCommand.writeHtmlTable(cmd, season, head, tableEntries)
-	if err != nil {
-		return err
-	}
 
 	cli.Print(fmt.Sprintf("Season: %s", season.Name))
 	cli.PrintTable(head, tableEntries)
@@ -96,17 +88,4 @@ func getSortName(cmd *cobra.Command) (string, error) {
 	}
 
 	return sortName, nil
-}
-
-func (getTableCommand *getTableCommand) writeHtmlTable(cmd *cobra.Command, season games.Season, head []string, tableEntries [][]string) error {
-	withHtml, err := cmd.Flags().GetBool("html")
-	if err != nil {
-		return err
-	}
-
-	if withHtml {
-		return getTableCommand.htmlWriter.WriteSeasonTable(season, head, tableEntries)
-	}
-
-	return nil
 }

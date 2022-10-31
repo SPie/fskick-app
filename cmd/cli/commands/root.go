@@ -7,7 +7,6 @@ import (
 	"github.com/spie/fskick/cmd/cli/commands/players"
 	"github.com/spie/fskick/cmd/cli/commands/seasons"
 	g "github.com/spie/fskick/games"
-	"github.com/spie/fskick/html"
 	p "github.com/spie/fskick/players"
 )
 
@@ -19,7 +18,7 @@ type rootCommand struct {
 	cc *cobra.Command
 }
 
-func NewRootCommand(playersManager p.Manager, gamesManager g.Manager, htmlWriter html.HtmlWriter) RootCommand {
+func NewRootCommand(playersManager p.Manager, gamesManager g.Manager) RootCommand {
 	rootCommand := &rootCommand{cc: &cobra.Command{
 		Use:   "fskick",
 		Short: "FSKick CLI app",
@@ -28,7 +27,7 @@ func NewRootCommand(playersManager p.Manager, gamesManager g.Manager, htmlWriter
 
 	playersCommand := players.NewPlayersCommand(playersManager, gamesManager)
 	rootCommand.cc.AddCommand(playersCommand.GetPlayersCommand())
-	seasonsCommand := seasons.NewSeasonsCommand(gamesManager, playersManager, htmlWriter)
+	seasonsCommand := seasons.NewSeasonsCommand(gamesManager, playersManager)
 	rootCommand.cc.AddCommand(seasonsCommand.GetSeasonsCommand())
 	gamesCommand := games.NewGamesCommand(gamesManager, playersManager)
 	rootCommand.cc.AddCommand(gamesCommand.GetGamesCommand())
