@@ -17,13 +17,17 @@ type Player struct {
 	Attendances *[]Attendance `json:"attendances"`
 }
 
-type PlayerStats struct {
+type PlayerAttendance struct {
 	Player
+	Wins  int `json:"wins"`
+	Games int `json:"games"`
+}
+
+type PlayerStats struct {
+	PlayerAttendance
 	Position    int     `json:"position"`
 	PointsRatio float32 `json:"pointsRatio"`
 	Points      int     `json:"points"`
-	Wins        int     `json:"wins"`
-	Games       int     `json:"games"`
 }
 
 type Team *[]Player
@@ -35,7 +39,7 @@ type PlayerCreator interface {
 type PlayerStatsCalculator interface {
 	GetPlayersStats(season games.Season) (*[]PlayerStats, error)
 	GetSortFunction(sortName string) sortFunction
-	GetPlayerAttendances(name string) (*[]Attendance, error)
+	GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error)
 }
 
 type AttendanceCreator interface {
@@ -185,9 +189,11 @@ func initializePlayerStatsAndGetMaxGames(players *[]Player) (*[]PlayerStats, int
 		}
 
 		playersStats[i] = PlayerStats{
-			Player: player,
-			Games:  games,
-			Wins:   wins,
+			PlayerAttendance: PlayerAttendance{
+				Player: player,
+				Games:  games,
+				Wins:   wins,
+			},
 			Points: wins * 3,
 		}
 	}
@@ -208,6 +214,43 @@ func calculateAndSetPointsRatio(playersStats *[]PlayerStats, maxGames int) {
 	}
 }
 
+func (manager manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error) {
+	player, err := manager.playerRepository.FindPlayerByUUID(playerUuid)
+	if err != nil {
+		return &[]PlayerStats{}, err
+	}
+
+	attendances, err := manager.attendancesRepository.FindFellowAttendancesForPlayer(player)
+	if err != nil {
+		return &[]PlayerStats{}, err
+	}
+
+	playerMap := map[uint]*Player{}
+
+	for _, attendance := range *attendances {
+		if _, ok := playerMap[attendance.PlayerID]; !ok {
+			fellowPlayer := attendance.Player
+			fellowPlayer.Attendances = &[]Attendance{}
+			playerMap[attendance.PlayerID] = fellowPlayer
+		}
+
+		playerAttendances := *playerMap[attendance.PlayerID].Attendances
+		playerAttendances = append(playerAttendances, attendance)
+
+		playerMap[attendance.PlayerID].Attendances = &playerAttendances
+	}
+
+	players := []Player{}
+	for _, fellowPlayer := range playerMap {
+		players = append(players, *fellowPlayer)
+	}
+
+	playerStats, maxGames := initializePlayerStatsAndGetMaxGames(&players)
+	calculateAndSetPointsRatio(playerStats, maxGames)
+
+	return playerStats, nil
+}
+
 func (manager manager) GetSortFunction(sortName string) sortFunction {
 	switch sortName {
 	case SortByWins:
@@ -219,15 +262,6 @@ func (manager manager) GetSortFunction(sortName string) sortFunction {
 	}
 
 	return sortByPointsRatio
-}
-
-func (manager manager) GetPlayerAttendances(name string) (*[]Attendance, error) {
-	player, err := manager.playerRepository.FindPlayerByName(name)
-	if err != nil {
-		return &[]Attendance{}, err
-	}
-
-	return manager.attendancesRepository.FindAttendancesForPlayer(player)
 }
 
 type sortFunction func(playersStats *[]PlayerStats)

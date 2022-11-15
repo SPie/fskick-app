@@ -10,6 +10,7 @@ import (
 type PlayerRepository interface {
 	db.Repository
 	Save(player *Player) error
+	FindPlayerByUUID(uuid string) (*Player, error)
 	FindPlayerByName(name string) (*Player, error)
 	FindPlayersByNames(names []string) (*[]Player, error)
 	FindPlayersPlayedInSeason(season games.Season) (*[]Player, error)
@@ -35,6 +36,16 @@ func (repository *playerRepository) Save(player *Player) error {
 	}
 
 	return repository.connectionHandler.Save(player)
+}
+
+func (repository *playerRepository) FindPlayerByUUID(uuid string) (*Player, error) {
+	player := &Player{}
+	err := repository.connectionHandler.FindOne(player, &Player{Model: db.Model{UUID: uuid}})
+	if err != nil {
+		return &Player{}, err
+	}
+
+	return player, nil
 }
 
 func (repository *playerRepository) FindPlayerByName(name string) (*Player, error) {
@@ -95,7 +106,7 @@ func getAttendancesForSeason(season games.Season, attendances *[]Attendance) *[]
 
 func (repository *playerRepository) AllPlayersWithAttendances() (*[]Player, error) {
 	players := &[]Player{}
-	err := repository.connectionHandler.Preload("Attendances").Find(players)
+	err := repository.connectionHandler.Preload("Attendances.Game").Find(players)
 	if err != nil {
 		return &[]Player{}, err
 	}
@@ -113,61 +124,4 @@ func (repository *playerRepository) SearchPlayers(query string) (*[]Player, erro
 	fmt.Println(len(*players))
 
 	return players, nil
-}
-
-type Attendance struct {
-	db.Model
-	Win      bool        `json:"win"`
-	PlayerID uint        `json:"-"`
-	Player   *Player     `json:"-"`
-	GameID   uint        `json:"-"`
-	Game     *games.Game `json:"game"`
-}
-
-type AttendancesRepository interface {
-	db.Repository
-	Save(attendance *Attendance) error
-	FindAttendancesForSeason(season *games.Season) (*[]Attendance, error)
-	FindAttendancesForPlayer(player *Player) (*[]Attendance, error)
-	Create(attendances *[]Attendance) error
-}
-
-type attendancesRepository struct {
-	connectionHandler db.ConnectionHandler
-}
-
-func NewAttendancesRepository(connectionHandler db.ConnectionHandler) AttendancesRepository {
-	return &attendancesRepository{connectionHandler: connectionHandler}
-}
-
-func (repository *attendancesRepository) Save(attendance *Attendance) error {
-	return repository.connectionHandler.Save(attendance)
-}
-
-func (repository *attendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
-	attendances := &[]Attendance{}
-	err := repository.connectionHandler.Joins("Player").Joins("Game").Find(attendances, &Attendance{Game: &games.Game{Season: season}})
-	if err != nil {
-		return &[]Attendance{}, err
-	}
-
-	return attendances, nil
-}
-
-func (repository *attendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
-	attendances := &[]Attendance{}
-	err := repository.connectionHandler.Joins("Player").Find(attendances, &Attendance{Player: player})
-	if err != nil {
-		return &[]Attendance{}, err
-	}
-
-	return attendances, nil
-}
-
-func (repository *attendancesRepository) Create(attendances *[]Attendance) error {
-	return repository.connectionHandler.Create(attendances)
-}
-
-func (repository *attendancesRepository) AutoMigrate() {
-	repository.connectionHandler.AutoMigrate(&Attendance{})
 }
