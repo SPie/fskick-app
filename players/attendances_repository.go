@@ -79,7 +79,9 @@ func (repository *attendancesRepository) FindFellowAttendancesForPlayer(player *
 
 func (repository *attendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
-	err := repository.connectionHandler.Find(attendances, &Attendance{PlayerID: player.ID, Win: win})
+	err := repository.connectionHandler.
+		Where("win = ? AND player_id = ?", win, player.ID).
+		Find(attendances)
 	if err != nil {
 		return &[]Attendance{}, err
 	}
