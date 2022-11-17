@@ -19,9 +19,12 @@ func SetUp(playersManager players.Manager, gamesManager games.Manager) *gin.Engi
 	{
 		api.GET("/seasons", gamesHandlers.GetSeasons(gamesManager))
 		api.GET("/seasons/table", gamesHandlers.GetTable(playersManager, gamesManager))
-		api.GET("/seasons/table/:season", gamesHandlers.GetTable(playersManager, gamesManager))
+		api.GET("/seasons/table/:season", gamesHandlers.GetTableForSeason(playersManager, gamesManager))
 
 		api.GET("/players", playersHandlers.GetPlayers(playersManager))
+		api.GET("/playsers/:player/seasons/:seasons", gamesHandlers.GetTableForPlayer(playersManager, gamesManager))
+		api.GET("/players/:player/team", playersHandlers.GetFavoriteTeam(playersManager))
+		api.GET("/players/:player", playersHandlers.GetPlayers(playersManager))
 
 		api.GET("/games/count", gamesHandlers.GetGamesCount(gamesManager))
 	}

@@ -12,11 +12,11 @@ import (
 
 type getPlayersCommand struct {
 	cc             *cobra.Command
-	playersManager p.Manager
+	playersManager p.PlayerStatsCalculator
 	gamesManager   games.Manager
 }
 
-func newGetPlayersCommand(playersManager p.Manager, gamesManager games.Manager) *getPlayersCommand {
+func newGetPlayersCommand(playersManager p.PlayerStatsCalculator, gamesManager games.Manager) *getPlayersCommand {
 	getPlayersCommand := getPlayersCommand{playersManager: playersManager, gamesManager: gamesManager}
 
 	cc := &cobra.Command{
@@ -43,10 +43,12 @@ func (getPlayersCommand *getPlayersCommand) getPlayers(cmd *cobra.Command, args 
 		return err
 	}
 
-	playersStats, err := getPlayersCommand.playersManager.GetPlayerStats(games.Season{}, getPlayersCommand.playersManager.GetSortFunction(sortName))
+	playersStats, err := getPlayersCommand.playersManager.GetPlayersStats(games.Season{})
 	if err != nil {
 		return err
 	}
+
+	getPlayersCommand.playersManager.GetSortFunction(sortName)(playersStats)
 
 	if len(args) > 0 {
 		playersStats = filterPlayerStatsByName(args[0], playersStats)
