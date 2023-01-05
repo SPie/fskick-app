@@ -8,7 +8,6 @@ import (
 	"github.com/spie/fskick/cmd/cli/commands"
 	"github.com/spie/fskick/db"
 	"github.com/spie/fskick/games"
-	"github.com/spie/fskick/html"
 	"github.com/spie/fskick/players"
 )
 
@@ -41,13 +40,7 @@ func main() {
 	attentanceRepository := players.NewAttendancesRepository(connectionHandler)
 	playersManager := players.NewManager(playersRepository, attentanceRepository)
 
-	htmlTableFile, err := os.OpenFile(os.Getenv("SEASON_TABLE_HTML"), os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer htmlTableFile.Close()
-
-	if err := commands.NewRootCommand(playersManager, gamesManager, html.NewHtmlWriter(htmlTableFile)).Execute(); err != nil {
+	if err := commands.NewRootCommand(playersManager, gamesManager).Execute(); err != nil {
 		log.Fatal(err)
 	}
 }

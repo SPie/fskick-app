@@ -2,6 +2,7 @@ package games
 
 import (
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -26,6 +27,7 @@ func newCreateGame(gamesManager g.Manager, playersManager players.AttendanceCrea
 
 	cc.Flags().StringP("winners", "w", "", "comma seperated names of winners")
 	cc.Flags().StringP("losers", "l", "", "comma seperated names of losers")
+	cc.Flags().StringP("playedAt", "p", "", "Date and time of the game")
 
 	createGameCommand.cc = cc
 
@@ -44,7 +46,12 @@ func (createGameCommand *createGameCommand) CreateGame(cmd *cobra.Command, args 
 		return err
 	}
 
-	game, err := createGameCommand.gamesManager.CreateGame()
+	playedAt, err := getPlayedAt(cmd)
+	if err != nil {
+		return err
+	}
+
+	game, err := createGameCommand.gamesManager.CreateGame(playedAt)
 	if err != nil {
 		return err
 	}
@@ -80,4 +87,18 @@ func getPlayerNamesAsString(team players.Team) string {
 	}
 
 	return strings.Join(names, ",")
+}
+
+func getPlayedAt(cmd *cobra.Command) (time.Time, error) {
+	playedAtFlag, _ := cmd.Flags().GetString("playedAt")
+	if playedAtFlag == "" {
+		return time.Time{}, nil
+	}
+
+	playedAt, err := time.Parse("2006-01-02", playedAtFlag)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return playedAt, nil
 }

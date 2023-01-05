@@ -3,6 +3,7 @@ package games
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/spie/fskick/db"
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ type Manager interface {
 	CreateSeason(name string) (*Season, error)
 	GetSeasons() ([]Season, error)
 	ActivateSeason(name string) (Season, error)
-	CreateGame() (*Game, error)
+	CreateGame(playedAt time.Time) (*Game, error)
 	ActiveSeason() (Season, error)
 	GetSeasonByName(name string) (Season, error)
 	GetSeasonByUuid(uuid string) (Season, error)
@@ -76,13 +77,17 @@ func (manager manager) ActivateSeason(name string) (Season, error) {
 	return season, nil
 }
 
-func (manager manager) CreateGame() (*Game, error) {
+func (manager manager) CreateGame(playedAt time.Time) (*Game, error) {
 	activeSeason, err := manager.seasonsRepository.FindActiveSeason()
 	if err != nil {
 		return &Game{}, err
 	}
 
-	game := &Game{Season: &activeSeason}
+	if playedAt.IsZero() {
+		playedAt = time.Now()
+	}
+
+	game := &Game{Season: &activeSeason, PlayedAt: playedAt}
 
 	err = manager.gameRepository.Save(game)
 	if err != nil {
@@ -115,8 +120,9 @@ func (manager manager) GetSeasonByUuid(uuid string) (Season, error) {
 
 type Game struct {
 	db.Model
-	SeasonID uint    `json:"-"`
-	Season   *Season `json:"season"`
+	PlayedAt time.Time `json:"playedAt"`
+	SeasonID uint      `json:"-"`
+	Season   *Season   `json:"season"`
 }
 
 type GamesRepository interface {
@@ -159,6 +165,8 @@ func (repository *gamesRepository) GetAll() (*[]Game, error) {
 
 func (repository *gamesRepository) AutoMigrate() {
 	repository.connectionHandler.AutoMigrate(&Game{})
+
+	repository.connectionHandler.Exec("UPDATE games SET played_at = created_at WHERE played_at IS NULL")
 }
 
 type Season struct {

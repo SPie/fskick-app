@@ -24,6 +24,7 @@ type ConnectionHandler interface {
 	Count(model interface{}) (int, error)
 	Where(query interface{}, args ...interface{}) ConnectionHandler
 	AutoMigrate(model interface{})
+	Exec(statement string, parameters ...interface{}) error
 	Close() error
 	SetDebug()
 }
@@ -175,6 +176,12 @@ func (connectionHandler *connectionHandler) Where(query interface{}, args ...int
 
 func (connectionHandler *connectionHandler) AutoMigrate(model interface{}) {
 	connectionHandler.connection.AutoMigrate(model)
+}
+
+func (connectionHandler *connectionHandler) Exec(statement string, parameters ...interface{}) error {
+	connectionHandler.connection.Exec(statement, parameters...)
+
+	return nil
 }
 
 func (connectionHandler *connectionHandler) Close() error {
