@@ -14,10 +14,10 @@ import (
 type createGameCommand struct {
 	cc             *cobra.Command
 	gamesManager   g.Manager
-	playersManager players.Manager
+	playersManager players.AttendanceCreator
 }
 
-func newCreateGame(gamesManager g.Manager, playersManager players.Manager) *createGameCommand {
+func newCreateGame(gamesManager g.Manager, playersManager players.AttendanceCreator) *createGameCommand {
 	createGameCommand := createGameCommand{gamesManager: gamesManager, playersManager: playersManager}
 
 	cc := &cobra.Command{

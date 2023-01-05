@@ -14,10 +14,10 @@ import (
 type getTableCommand struct {
 	cc             *cobra.Command
 	gamesManager   games.Manager
-	playersManager players.Manager
+	playersManager players.PlayerStatsCalculator
 }
 
-func newGetTableCommand(gamesManager games.Manager, playersManager players.Manager) *getTableCommand {
+func newGetTableCommand(gamesManager games.Manager, playersManager players.PlayerStatsCalculator) *getTableCommand {
 	getTableCommand := &getTableCommand{gamesManager: gamesManager, playersManager: playersManager}
 
 	cc := &cobra.Command{
@@ -45,10 +45,12 @@ func (tableCommand *getTableCommand) getTable(cmd *cobra.Command, args []string)
 		return err
 	}
 
-	playerStats, err := tableCommand.playersManager.GetPlayerStats(season, tableCommand.playersManager.GetSortFunction(sortName))
+	playerStats, err := tableCommand.playersManager.GetPlayersStats(season)
 	if err != nil {
 		return err
 	}
+
+	tableCommand.playersManager.GetSortFunction(sortName)(playerStats)
 
 	gamesCount := len(*season.Games)
 

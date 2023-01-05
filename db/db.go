@@ -18,9 +18,11 @@ type ConnectionHandler interface {
 	FindOne(model interface{}, condition interface{}) error
 	Find(models interface{}, condition ...interface{}) error
 	GetAll(models interface{}) error
+	Select(query interface{}, args ...interface{}) ConnectionHandler
 	Preload(modelName string) ConnectionHandler
 	Joins(modelName string) ConnectionHandler
 	Count(model interface{}) (int, error)
+	Where(query interface{}, args ...interface{}) ConnectionHandler
 	AutoMigrate(model interface{})
 	Exec(statement string, parameters ...interface{}) error
 	Close() error
@@ -140,6 +142,13 @@ func (connectionHandler *connectionHandler) Preload(modelName string) Connection
 	return chainConnectionHandler
 }
 
+func (connectionHandler *connectionHandler) Select(query interface{}, args ...interface{}) ConnectionHandler {
+	chainConnectionHandler := connectionHandler.getInstane()
+	chainConnectionHandler.connection = chainConnectionHandler.connection.Select(query, args...)
+
+	return chainConnectionHandler
+}
+
 func (connectionHandler *connectionHandler) Joins(modelName string) ConnectionHandler {
 	chainConnectionHandler := connectionHandler.getInstane()
 	chainConnectionHandler.connection = chainConnectionHandler.connection.Joins(modelName)
@@ -156,6 +165,13 @@ func (connectionHandler *connectionHandler) Count(model interface{}) (int, error
 	}
 
 	return int(count), nil
+}
+
+func (connectionHandler *connectionHandler) Where(query interface{}, args ...interface{}) ConnectionHandler {
+	chainConnectionHandler := connectionHandler.getInstane()
+	chainConnectionHandler.connection = chainConnectionHandler.connection.Where(query, args...)
+
+	return chainConnectionHandler
 }
 
 func (connectionHandler *connectionHandler) AutoMigrate(model interface{}) {

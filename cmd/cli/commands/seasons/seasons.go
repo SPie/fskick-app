@@ -15,7 +15,7 @@ type seasonsCommand struct {
 	cc *cobra.Command
 }
 
-func NewSeasonsCommand(gamesManager games.Manager, playersManager players.Manager) SeasonsCommand {
+func NewSeasonsCommand(gamesManager games.Manager, playersManager players.PlayerStatsCalculator) SeasonsCommand {
 	seasonsCommand := seasonsCommand{cc: &cobra.Command{
 		Use:   "seasons",
 		Short: "Commands to handle seasons",
