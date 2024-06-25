@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/spie/fskick/cmd/cli/commands"
-	"github.com/spie/fskick/db"
-	"github.com/spie/fskick/games"
-	"github.com/spie/fskick/players"
+	"github.com/spie/fskick/internal/cli/commands"
+	"github.com/spie/fskick/internal/db"
+	"github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/players"
 )
 
 func main() {
