@@ -25,7 +25,3 @@ func (model *Model) BeforeCreate(db *gorm.DB) error {
 
 	return nil
 }
-
-type Repository interface {
-	AutoMigrate()
-}

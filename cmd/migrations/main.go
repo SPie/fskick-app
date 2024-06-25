@@ -15,11 +15,6 @@ func main() {
 
 	connectionHandler, err := db.NewConnectionHandler(
 		os.Getenv("DB_DATABASE"),
-		os.Getenv("DB_USERNAME"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_DRIVER"),
 		os.Getenv("DB_LOG") != "false",
 	)
 	if err != nil {

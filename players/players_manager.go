@@ -47,22 +47,16 @@ type AttendanceCreator interface {
 	CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error)
 }
 
-type Manager interface {
-	PlayerCreator
-	PlayerStatsCalculator
-	AttendanceCreator
+type Manager struct {
+	playerRepository      *PlayerRepository
+	attendancesRepository *AttendancesRepository
 }
 
-type manager struct {
-	playerRepository      PlayerRepository
-	attendancesRepository AttendancesRepository
+func NewManager(playerRepository *PlayerRepository, attendancesRepository *AttendancesRepository) Manager {
+	return Manager{playerRepository: playerRepository, attendancesRepository: attendancesRepository}
 }
 
-func NewManager(playerRepository PlayerRepository, attendancesRepository AttendancesRepository) Manager {
-	return manager{playerRepository: playerRepository, attendancesRepository: attendancesRepository}
-}
-
-func (manager manager) CreatePlayer(name string) (*Player, error) {
+func (manager Manager) CreatePlayer(name string) (*Player, error) {
 	_, err := manager.playerRepository.FindPlayerByName(name)
 	if err == nil {
 		return &Player{}, errors.New(fmt.Sprintf("Player with name %s exists", name))
@@ -81,7 +75,7 @@ func (manager manager) CreatePlayer(name string) (*Player, error) {
 	return player, nil
 }
 
-func (manager manager) GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error) {
+func (manager Manager) GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error) {
 	winners, err := manager.getTeamByNames(winnerNames)
 	if err != nil {
 		return &[]Player{}, &[]Player{}, err
@@ -95,7 +89,7 @@ func (manager manager) GetTeamsByNames(winnerNames []string, loserNames []string
 	return winners, losers, nil
 }
 
-func (manager manager) getTeamByNames(names []string) (Team, error) {
+func (manager Manager) getTeamByNames(names []string) (Team, error) {
 	if len(names) < 1 {
 		return &[]Player{}, nil
 	}
@@ -112,7 +106,7 @@ func (manager manager) getTeamByNames(names []string) (Team, error) {
 	return players, nil
 }
 
-func (manager manager) CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error) {
+func (manager Manager) CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error) {
 	attendances := append(*createAttendances(game, winners, true), *createAttendances(game, losers, false)...)
 	if len(attendances) < 1 {
 		return &[]Player{}, &[]Player{}, errors.New("No attendances for game")
@@ -152,7 +146,7 @@ func createAttendances(game *games.Game, team Team, winning bool) *[]Attendance 
 	return &attendances
 }
 
-func (manager manager) GetPlayersStats(season games.Season) (*[]PlayerStats, error) {
+func (manager Manager) GetPlayersStats(season games.Season) (*[]PlayerStats, error) {
 	players, err := manager.getPlayersForPlayerStats(season)
 	if err != nil {
 		return &[]PlayerStats{}, err
@@ -164,7 +158,7 @@ func (manager manager) GetPlayersStats(season games.Season) (*[]PlayerStats, err
 	return playersStats, nil
 }
 
-func (manager manager) getPlayersForPlayerStats(season games.Season) (*[]Player, error) {
+func (manager Manager) getPlayersForPlayerStats(season games.Season) (*[]Player, error) {
 	if season.ID != 0 {
 		return manager.playerRepository.FindPlayersPlayedInSeason(season)
 	}
@@ -214,7 +208,7 @@ func calculateAndSetPointsRatio(playersStats *[]PlayerStats, maxGames int) {
 	}
 }
 
-func (manager manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error) {
+func (manager Manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error) {
 	player, err := manager.playerRepository.FindPlayerByUUID(playerUuid)
 	if err != nil {
 		return &[]PlayerStats{}, err
@@ -251,7 +245,7 @@ func (manager manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error
 	return playerStats, nil
 }
 
-func (manager manager) GetSortFunction(sortName string) sortFunction {
+func (manager Manager) GetSortFunction(sortName string) sortFunction {
 	switch sortName {
 	case SortByWins:
 		return sortByWins

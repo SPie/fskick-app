@@ -9,30 +9,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type Manager interface {
-	CreateSeason(name string) (*Season, error)
-	GetSeasons() ([]Season, error)
-	ActivateSeason(name string) (Season, error)
-	CreateGame(playedAt time.Time) (*Game, error)
-	ActiveSeason() (Season, error)
-	GetSeasonByName(name string) (Season, error)
-	GetSeasonByUuid(uuid string) (Season, error)
-	GetGamesCount() (int, error)
+type Manager struct {
+	gameRepository    *GamesRepository
+	seasonsRepository *SeasonsRepository
 }
 
-type manager struct {
-	gameRepository    GamesRepository
-	seasonsRepository SeasonsRepository
-}
-
-func NewManager(gameRepository GamesRepository, seasonsRepository SeasonsRepository) Manager {
-	return manager{
+func NewManager(gameRepository *GamesRepository, seasonsRepository *SeasonsRepository) Manager {
+	return Manager{
 		gameRepository:    gameRepository,
 		seasonsRepository: seasonsRepository,
 	}
 }
 
-func (manager manager) CreateSeason(name string) (*Season, error) {
+func (manager Manager) CreateSeason(name string) (*Season, error) {
 	_, err := manager.seasonsRepository.FindSeasonByName(name)
 	if err == nil {
 		return &Season{}, errors.New(fmt.Sprintf("Season with name %s exists", name))
@@ -51,11 +40,11 @@ func (manager manager) CreateSeason(name string) (*Season, error) {
 	return season, nil
 }
 
-func (manager manager) GetSeasons() ([]Season, error) {
+func (manager Manager) GetSeasons() ([]Season, error) {
 	return manager.seasonsRepository.GetAll()
 }
 
-func (manager manager) ActivateSeason(name string) (Season, error) {
+func (manager Manager) ActivateSeason(name string) (Season, error) {
 	season, err := manager.seasonsRepository.FindSeasonByName(name)
 	if err != nil {
 		return Season{}, err
@@ -77,7 +66,7 @@ func (manager manager) ActivateSeason(name string) (Season, error) {
 	return season, nil
 }
 
-func (manager manager) CreateGame(playedAt time.Time) (*Game, error) {
+func (manager Manager) CreateGame(playedAt time.Time) (*Game, error) {
 	activeSeason, err := manager.seasonsRepository.FindActiveSeason()
 	if err != nil {
 		return &Game{}, err
@@ -97,7 +86,7 @@ func (manager manager) CreateGame(playedAt time.Time) (*Game, error) {
 	return game, nil
 }
 
-func (manager manager) ActiveSeason() (Season, error) {
+func (manager Manager) ActiveSeason() (Season, error) {
 	activeSeason, err := manager.seasonsRepository.FindActiveSeason()
 	if err != nil {
 		return Season{}, err
@@ -106,15 +95,15 @@ func (manager manager) ActiveSeason() (Season, error) {
 	return activeSeason, nil
 }
 
-func (manager manager) GetSeasonByName(name string) (Season, error) {
+func (manager Manager) GetSeasonByName(name string) (Season, error) {
 	return manager.seasonsRepository.FindSeasonByName(name)
 }
 
-func (manager manager) GetGamesCount() (int, error) {
+func (manager Manager) GetGamesCount() (int, error) {
 	return manager.gameRepository.Count()
 }
 
-func (manager manager) GetSeasonByUuid(uuid string) (Season, error) {
+func (manager Manager) GetSeasonByUuid(uuid string) (Season, error) {
 	return manager.seasonsRepository.FindSeasonByUuid(uuid)
 }
 
@@ -125,22 +114,15 @@ type Game struct {
 	Season   *Season   `json:"season"`
 }
 
-type GamesRepository interface {
-	db.Repository
-	Count() (int, error)
-	GetAll() (*[]Game, error)
-	Save(game *Game) error
+type GamesRepository struct {
+	connectionHandler *db.ConnectionHandler
 }
 
-type gamesRepository struct {
-	connectionHandler db.ConnectionHandler
+func NewGamesRepository(connectionHandler *db.ConnectionHandler) *GamesRepository {
+	return &GamesRepository{connectionHandler: connectionHandler}
 }
 
-func NewGamesRepository(connectionHandler db.ConnectionHandler) GamesRepository {
-	return &gamesRepository{connectionHandler: connectionHandler}
-}
-
-func (repository *gamesRepository) Save(game *Game) error {
+func (repository *GamesRepository) Save(game *Game) error {
 	if game.ID == 0 {
 		return repository.connectionHandler.Create(game)
 	}
@@ -148,11 +130,11 @@ func (repository *gamesRepository) Save(game *Game) error {
 	return repository.connectionHandler.Save(game)
 }
 
-func (repository *gamesRepository) Count() (int, error) {
+func (repository *GamesRepository) Count() (int, error) {
 	return repository.connectionHandler.Count(&Game{})
 }
 
-func (repository *gamesRepository) GetAll() (*[]Game, error) {
+func (repository *GamesRepository) GetAll() (*[]Game, error) {
 	games := &[]Game{}
 
 	err := repository.connectionHandler.GetAll(games)
@@ -163,7 +145,7 @@ func (repository *gamesRepository) GetAll() (*[]Game, error) {
 	return games, nil
 }
 
-func (repository *gamesRepository) AutoMigrate() {
+func (repository *GamesRepository) AutoMigrate() {
 	repository.connectionHandler.AutoMigrate(&Game{})
 
 	repository.connectionHandler.Exec("UPDATE games SET played_at = created_at WHERE played_at IS NULL")
@@ -176,25 +158,15 @@ type Season struct {
 	Games  *[]Game `json:"games"`
 }
 
-type SeasonsRepository interface {
-	db.Repository
-	Save(season *Season) error
-	Find(condition *Season) (*[]Season, error)
-	FindActiveSeason() (Season, error)
-	FindSeasonByName(name string) (Season, error)
-	FindSeasonByUuid(uuid string) (Season, error)
-	GetAll() ([]Season, error)
+type SeasonsRepository struct {
+	connectionHandler *db.ConnectionHandler
 }
 
-type seasonsRepository struct {
-	connectionHandler db.ConnectionHandler
+func NewSeasonsRepository(connectionHandler *db.ConnectionHandler) *SeasonsRepository {
+	return &SeasonsRepository{connectionHandler: connectionHandler}
 }
 
-func NewSeasonsRepository(connectionHandler db.ConnectionHandler) SeasonsRepository {
-	return &seasonsRepository{connectionHandler: connectionHandler}
-}
-
-func (repository *seasonsRepository) Save(season *Season) error {
+func (repository *SeasonsRepository) Save(season *Season) error {
 	if season.ID == 0 {
 		return repository.connectionHandler.Create(season)
 	}
@@ -202,7 +174,7 @@ func (repository *seasonsRepository) Save(season *Season) error {
 	return repository.connectionHandler.Save(season)
 }
 
-func (repository *seasonsRepository) FindSeasonByName(name string) (Season, error) {
+func (repository *SeasonsRepository) FindSeasonByName(name string) (Season, error) {
 	season := &Season{}
 
 	err := repository.connectionHandler.Preload("Games").FindOne(season, &Season{Name: name})
@@ -213,7 +185,7 @@ func (repository *seasonsRepository) FindSeasonByName(name string) (Season, erro
 	return *season, nil
 }
 
-func (repository *seasonsRepository) FindSeasonByUuid(uuid string) (Season, error) {
+func (repository *SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error) {
 	season := &Season{}
 
 	err := repository.connectionHandler.Preload("Games").FindOne(season, &Season{Model: db.Model{UUID: uuid}})
@@ -224,7 +196,7 @@ func (repository *seasonsRepository) FindSeasonByUuid(uuid string) (Season, erro
 	return *season, nil
 }
 
-func (repository *seasonsRepository) GetAll() ([]Season, error) {
+func (repository *SeasonsRepository) GetAll() ([]Season, error) {
 	seasons := &[]Season{}
 
 	err := repository.connectionHandler.Preload("Games").GetAll(seasons)
@@ -235,7 +207,7 @@ func (repository *seasonsRepository) GetAll() ([]Season, error) {
 	return *seasons, nil
 }
 
-func (repository *seasonsRepository) FindActiveSeason() (Season, error) {
+func (repository *SeasonsRepository) FindActiveSeason() (Season, error) {
 	season := &Season{}
 
 	err := repository.connectionHandler.Preload("Games").FindOne(season, &Season{Active: true})
@@ -246,7 +218,7 @@ func (repository *seasonsRepository) FindActiveSeason() (Season, error) {
 	return *season, nil
 }
 
-func (repository *seasonsRepository) Find(condition *Season) (*[]Season, error) {
+func (repository *SeasonsRepository) Find(condition *Season) (*[]Season, error) {
 	seasons := &[]Season{}
 
 	err := repository.connectionHandler.Preload("Games").Find(seasons, condition)
@@ -257,6 +229,6 @@ func (repository *seasonsRepository) Find(condition *Season) (*[]Season, error) 
 	return seasons, nil
 }
 
-func (repository *seasonsRepository) AutoMigrate() {
+func (repository *SeasonsRepository) AutoMigrate() {
 	repository.connectionHandler.AutoMigrate(&Season{})
 }

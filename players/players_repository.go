@@ -7,30 +7,19 @@ import (
 	"github.com/spie/fskick/games"
 )
 
-type PlayerRepository interface {
-	db.Repository
-	Save(player *Player) error
-	FindPlayerByUUID(uuid string) (*Player, error)
-	FindPlayerByName(name string) (*Player, error)
-	FindPlayersByNames(names []string) (*[]Player, error)
-	FindPlayersPlayedInSeason(season games.Season) (*[]Player, error)
-	AllPlayersWithAttendances() (*[]Player, error)
-	SearchPlayers(query string) (*[]Player, error)
+type PlayerRepository struct {
+	connectionHandler *db.ConnectionHandler
 }
 
-type playerRepository struct {
-	connectionHandler db.ConnectionHandler
+func NewPlayerRepository(connectionHandler *db.ConnectionHandler) *PlayerRepository {
+	return &PlayerRepository{connectionHandler: connectionHandler}
 }
 
-func NewPlayerRepository(connectionHandler db.ConnectionHandler) PlayerRepository {
-	return &playerRepository{connectionHandler: connectionHandler}
-}
-
-func (repository *playerRepository) AutoMigrate() {
+func (repository *PlayerRepository) AutoMigrate() {
 	repository.connectionHandler.AutoMigrate(&Player{})
 }
 
-func (repository *playerRepository) Save(player *Player) error {
+func (repository *PlayerRepository) Save(player *Player) error {
 	if player.ID == 0 {
 		return repository.connectionHandler.Create(player)
 	}
@@ -38,7 +27,7 @@ func (repository *playerRepository) Save(player *Player) error {
 	return repository.connectionHandler.Save(player)
 }
 
-func (repository *playerRepository) FindPlayerByUUID(uuid string) (*Player, error) {
+func (repository *PlayerRepository) FindPlayerByUUID(uuid string) (*Player, error) {
 	player := &Player{}
 	err := repository.connectionHandler.FindOne(player, &Player{Model: db.Model{UUID: uuid}})
 	if err != nil {
@@ -48,7 +37,7 @@ func (repository *playerRepository) FindPlayerByUUID(uuid string) (*Player, erro
 	return player, nil
 }
 
-func (repository *playerRepository) FindPlayerByName(name string) (*Player, error) {
+func (repository *PlayerRepository) FindPlayerByName(name string) (*Player, error) {
 	player := &Player{}
 	err := repository.connectionHandler.FindOne(player, &Player{Name: name})
 	if err != nil {
@@ -58,7 +47,7 @@ func (repository *playerRepository) FindPlayerByName(name string) (*Player, erro
 	return player, nil
 }
 
-func (repository *playerRepository) FindPlayersByNames(names []string) (*[]Player, error) {
+func (repository *PlayerRepository) FindPlayersByNames(names []string) (*[]Player, error) {
 	players := &[]Player{}
 
 	err := repository.connectionHandler.Find(players, "name IN ?", names)
@@ -69,7 +58,7 @@ func (repository *playerRepository) FindPlayersByNames(names []string) (*[]Playe
 	return players, nil
 }
 
-func (repository *playerRepository) FindPlayersPlayedInSeason(season games.Season) (*[]Player, error) {
+func (repository *PlayerRepository) FindPlayersPlayedInSeason(season games.Season) (*[]Player, error) {
 	players := &[]Player{}
 
 	err := repository.connectionHandler.Preload("Attendances.Game.Season").Find(players)
@@ -104,7 +93,7 @@ func getAttendancesForSeason(season games.Season, attendances *[]Attendance) *[]
 	return &attendancesInSeason
 }
 
-func (repository *playerRepository) AllPlayersWithAttendances() (*[]Player, error) {
+func (repository *PlayerRepository) AllPlayersWithAttendances() (*[]Player, error) {
 	players := &[]Player{}
 	err := repository.connectionHandler.Preload("Attendances.Game").Find(players)
 	if err != nil {
@@ -114,7 +103,7 @@ func (repository *playerRepository) AllPlayersWithAttendances() (*[]Player, erro
 	return players, nil
 }
 
-func (repository *playerRepository) SearchPlayers(query string) (*[]Player, error) {
+func (repository *PlayerRepository) SearchPlayers(query string) (*[]Player, error) {
 	players := &[]Player{}
 
 	err := repository.connectionHandler.Find(players, "name LIKE ?", fmt.Sprintf("%%%s%%", query))

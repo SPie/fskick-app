@@ -14,28 +14,19 @@ type Attendance struct {
 	Game     *games.Game `json:"game"`
 }
 
-type AttendancesRepository interface {
-	db.Repository
-	Save(attendance *Attendance) error
-	FindAttendancesForSeason(season *games.Season) (*[]Attendance, error)
-	FindAttendancesForPlayer(player *Player) (*[]Attendance, error)
-	FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error)
-	Create(attendances *[]Attendance) error
+type AttendancesRepository struct {
+	connectionHandler *db.ConnectionHandler
 }
 
-type attendancesRepository struct {
-	connectionHandler db.ConnectionHandler
+func NewAttendancesRepository(connectionHandler *db.ConnectionHandler) *AttendancesRepository {
+	return &AttendancesRepository{connectionHandler: connectionHandler}
 }
 
-func NewAttendancesRepository(connectionHandler db.ConnectionHandler) AttendancesRepository {
-	return &attendancesRepository{connectionHandler: connectionHandler}
-}
-
-func (repository *attendancesRepository) Save(attendance *Attendance) error {
+func (repository *AttendancesRepository) Save(attendance *Attendance) error {
 	return repository.connectionHandler.Save(attendance)
 }
 
-func (repository *attendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
+func (repository *AttendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Joins("Player").
@@ -48,7 +39,7 @@ func (repository *attendancesRepository) FindAttendancesForSeason(season *games.
 	return attendances, nil
 }
 
-func (repository *attendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+func (repository *AttendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Joins("Player").
@@ -61,7 +52,7 @@ func (repository *attendancesRepository) FindAttendancesForPlayer(player *Player
 	return attendances, nil
 }
 
-func (repository *attendancesRepository) FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+func (repository *AttendancesRepository) FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error) {
 	fellowWinnerAttendances, err := repository.findFellowAttendancesForPlayerByWin(player, true)
 	if err != nil {
 		return &[]Attendance{}, err
@@ -77,7 +68,7 @@ func (repository *attendancesRepository) FindFellowAttendancesForPlayer(player *
 	return &fellowAttendances, nil
 }
 
-func (repository *attendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
+func (repository *AttendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Where("win = ? AND player_id = ?", win, player.ID).
@@ -107,10 +98,10 @@ func getGameIdsFromAttendances(attendances *[]Attendance) []uint {
 	return gameIds
 }
 
-func (repository *attendancesRepository) Create(attendances *[]Attendance) error {
+func (repository *AttendancesRepository) Create(attendances *[]Attendance) error {
 	return repository.connectionHandler.Create(attendances)
 }
 
-func (repository *attendancesRepository) AutoMigrate() {
+func (repository *AttendancesRepository) AutoMigrate() {
 	repository.connectionHandler.AutoMigrate(&Attendance{})
 }
