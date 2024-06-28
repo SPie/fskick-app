@@ -2,30 +2,36 @@ package main
 
 import (
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/spie/fskick/internal/api"
+	"github.com/spie/fskick/internal/config"
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/migrations"
 )
 
 func main() {
-	godotenv.Load()
+	cfg, err := config.LoadApiConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	connectionHandler, err := db.NewConnectionHandler(
-		os.Getenv("DB_DATABASE"),
-		os.Getenv("DB_LOG") != "false",
-	)
+	conn, err := db.OpenDbConnection(cfg.DbConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = db.MigrateFS(conn, migrations.FS, ".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	connectionHandler, err := db.NewConnectionHandler(cfg.DbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer connectionHandler.Close()
-
-	if os.Getenv("DB_DEBUG") == "true" {
-		connectionHandler.SetDebug()
-	}
 
 	gamesRepository := games.NewGamesRepository(connectionHandler)
 	seasonsRepository := games.NewSeasonsRepository(connectionHandler)
@@ -35,7 +41,7 @@ func main() {
 	attentanceRepository := players.NewAttendancesRepository(connectionHandler)
 	playersManager := players.NewManager(playersRepository, attentanceRepository)
 
-	err = api.SetUp(playersManager, gamesManager).Run(os.Getenv("API_HOST"))
+	err = api.SetUp(playersManager, gamesManager).Run(cfg.ApiHost)
 	if err != nil {
 		log.Fatal(err)
 	}

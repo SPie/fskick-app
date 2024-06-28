@@ -1,21 +1,50 @@
 package db
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
+type DbConfig struct {
+	database string
+	withDebug bool
+	withLog bool
+}
+
+func CreateDbConfig(database string, withDebug bool, withLog bool) DbConfig {
+	return DbConfig{
+		database: database,
+		withDebug: withDebug,
+		withLog: withLog,
+	}
+}
+
+func OpenDbConnection(cfg DbConfig) (*sql.DB, error) {
+	return sql.Open("sqlite3", cfg.database)
+}
+
 type ConnectionHandler struct {
 	connection *gorm.DB
 }
 
-func NewConnectionHandler(database string, log bool) (*ConnectionHandler, error) {
-	return createSqliteConnection(getLogger(log), database)
+func NewConnectionHandler(cfg DbConfig) (*ConnectionHandler, error) {
+	conn, err := createSqliteConnection(getLogger(cfg.withLog), cfg.database)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.withDebug {
+		conn.SetDebug()
+	}
+
+	return conn, nil
 }
 
 func createConnectionHandler(connection *gorm.DB) *ConnectionHandler {
