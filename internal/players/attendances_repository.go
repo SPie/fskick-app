@@ -3,6 +3,7 @@ package players
 import (
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/uuid"
 )
 
 type Attendance struct {
@@ -16,17 +17,27 @@ type Attendance struct {
 
 type AttendancesRepository struct {
 	connectionHandler *db.ConnectionHandler
+	dbHandler db.Handler
+	uuidGenerator uuid.Generator
 }
 
-func NewAttendancesRepository(connectionHandler *db.ConnectionHandler) *AttendancesRepository {
-	return &AttendancesRepository{connectionHandler: connectionHandler}
+func NewAttendancesRepository(
+	connectionHandler *db.ConnectionHandler,
+	dbHandler db.Handler,
+	uuidGenerator uuid.Generator,
+) AttendancesRepository {
+	return AttendancesRepository{
+		connectionHandler: connectionHandler,
+		dbHandler: dbHandler,
+		uuidGenerator: uuidGenerator,
+	}
 }
 
-func (repository *AttendancesRepository) Save(attendance *Attendance) error {
+func (repository AttendancesRepository) Save(attendance *Attendance) error {
 	return repository.connectionHandler.Save(attendance)
 }
 
-func (repository *AttendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
+func (repository AttendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Joins("Player").
@@ -39,7 +50,7 @@ func (repository *AttendancesRepository) FindAttendancesForSeason(season *games.
 	return attendances, nil
 }
 
-func (repository *AttendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+func (repository AttendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Joins("Player").
@@ -52,7 +63,7 @@ func (repository *AttendancesRepository) FindAttendancesForPlayer(player *Player
 	return attendances, nil
 }
 
-func (repository *AttendancesRepository) FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+func (repository AttendancesRepository) FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error) {
 	fellowWinnerAttendances, err := repository.findFellowAttendancesForPlayerByWin(player, true)
 	if err != nil {
 		return &[]Attendance{}, err
@@ -68,7 +79,7 @@ func (repository *AttendancesRepository) FindFellowAttendancesForPlayer(player *
 	return &fellowAttendances, nil
 }
 
-func (repository *AttendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
+func (repository AttendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Where("win = ? AND player_id = ?", win, player.ID).
@@ -98,10 +109,6 @@ func getGameIdsFromAttendances(attendances *[]Attendance) []uint {
 	return gameIds
 }
 
-func (repository *AttendancesRepository) Create(attendances *[]Attendance) error {
+func (repository AttendancesRepository) Create(attendances *[]Attendance) error {
 	return repository.connectionHandler.Create(attendances)
-}
-
-func (repository *AttendancesRepository) AutoMigrate() {
-	repository.connectionHandler.AutoMigrate(&Attendance{})
 }

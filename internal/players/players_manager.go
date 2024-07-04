@@ -48,11 +48,11 @@ type AttendanceCreator interface {
 }
 
 type Manager struct {
-	playerRepository      *PlayerRepository
-	attendancesRepository *AttendancesRepository
+	playerRepository      PlayerRepository
+	attendancesRepository AttendancesRepository
 }
 
-func NewManager(playerRepository *PlayerRepository, attendancesRepository *AttendancesRepository) Manager {
+func NewManager(playerRepository PlayerRepository, attendancesRepository AttendancesRepository) Manager {
 	return Manager{playerRepository: playerRepository, attendancesRepository: attendancesRepository}
 }
 

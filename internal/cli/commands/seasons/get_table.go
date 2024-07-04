@@ -52,7 +52,7 @@ func (tableCommand *getTableCommand) getTable(cmd *cobra.Command, args []string)
 
 	tableCommand.playersManager.GetSortFunction(sortName)(playerStats)
 
-	gamesCount := len(*season.Games)
+	gamesCount := len(season.Games)
 
 	head := cli.CreateTableHead(gamesCount, playerStats)
 	tableEntries := cli.CreateTableEntries(gamesCount, playerStats)

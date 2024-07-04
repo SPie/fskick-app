@@ -8,6 +8,7 @@ import (
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/uuid"
 	"github.com/spie/fskick/migrations"
 )
 
@@ -17,12 +18,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conn, err := db.OpenDbConnection(cfg.DbConfig)
+	dbHandler, err := db.OpenDbHandler(cfg.DbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer dbHandler.Close()
 
-	err = db.MigrateFS(conn, migrations.FS, ".")
+	err = dbHandler.MigrateFS(migrations.FS, ".")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,12 +35,14 @@ func main() {
 	}
 	defer connectionHandler.Close()
 
-	gamesRepository := games.NewGamesRepository(connectionHandler)
-	seasonsRepository := games.NewSeasonsRepository(connectionHandler)
+	uuidGenerator := uuid.NewGenerator()
+
+	gamesRepository := games.NewGamesRepository(connectionHandler, dbHandler, uuidGenerator)
+	seasonsRepository := games.NewSeasonsRepository(connectionHandler, dbHandler, uuidGenerator)
 	gamesManager := games.NewManager(gamesRepository, seasonsRepository)
 
-	playersRepository := players.NewPlayerRepository(connectionHandler)
-	attentanceRepository := players.NewAttendancesRepository(connectionHandler)
+	playersRepository := players.NewPlayerRepository(connectionHandler, dbHandler, uuidGenerator)
+	attentanceRepository := players.NewAttendancesRepository(connectionHandler, dbHandler, uuidGenerator)
 	playersManager := players.NewManager(playersRepository, attentanceRepository)
 
 	err = api.SetUp(playersManager, gamesManager).Run(cfg.ApiHost)
