@@ -1,10 +1,21 @@
 package games
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	g "github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
 )
+
+type seasonResponse struct {
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+	Active bool `json:"active"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	GamesCount int `json:"gamesCount"`
+}
 
 func GetTable(playersManager players.Manager, gamesManager g.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -88,20 +99,28 @@ func getTable(
 	gamesManager g.Manager,
 	seasonUuid string,
 	sort string,
-) (*[]players.PlayerStats, g.Season, error) {
+) (*[]players.PlayerStats, seasonResponse, error) {
 	season, err := getSeason(gamesManager, seasonUuid)
 	if err != nil {
-		return &[]players.PlayerStats{}, g.Season{}, err
+		return &[]players.PlayerStats{}, seasonResponse{}, err
 	}
 
 	playerStats, err := playersManager.GetPlayersStats(season)
 	if err != nil {
-		return &[]players.PlayerStats{}, g.Season{}, err
+		return &[]players.PlayerStats{}, seasonResponse{}, err
 	}
 
 	playersManager.GetSortFunction(sort)(playerStats)
 
-	return playerStats, season, nil
+	seasonRes := getSeasonResponse(season)
+
+	gamesCount, err := gamesManager.GetGamesCountForSeason(season)
+	if err != nil {
+		return &[]players.PlayerStats{}, seasonResponse{}, err
+	}
+	seasonRes.GamesCount = gamesCount
+
+	return playerStats, seasonRes, nil
 }
 
 func getSeason(gamesManager g.Manager, seasonUuid string) (g.Season, error) {
@@ -110,4 +129,14 @@ func getSeason(gamesManager g.Manager, seasonUuid string) (g.Season, error) {
 	}
 
 	return gamesManager.ActiveSeason()
+}
+
+func getSeasonResponse(season g.Season) seasonResponse {
+	return seasonResponse{
+		UUID: season.UUID,
+		Name: season.Name,
+		Active: season.Active,
+		CreatedAt: season.CreatedAt,
+		UpdatedAt: season.UpdatedAt,
+	}
 }

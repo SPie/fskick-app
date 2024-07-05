@@ -5,24 +5,20 @@ import (
 
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
-	"github.com/spie/fskick/internal/uuid"
 )
 
 type PlayerRepository struct {
 	connectionHandler *db.ConnectionHandler
 	dbHandler db.Handler
-	uuidGenerator uuid.Generator
 }
 
 func NewPlayerRepository(
 	connectionHandler *db.ConnectionHandler,
 	dbHandler db.Handler,
-	uuidGenerator uuid.Generator,
 ) PlayerRepository {
 	return PlayerRepository{
 		connectionHandler: connectionHandler,
 		dbHandler: dbHandler,
-		uuidGenerator: uuidGenerator,
 	}
 }
 

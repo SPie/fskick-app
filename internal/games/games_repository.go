@@ -16,44 +16,65 @@ type Game struct {
 }
 
 type GamesRepository struct {
-	connectionHandler *db.ConnectionHandler
 	dbHandler db.Handler
-	uuidGenerator uuid.Generator
 }
 
-func NewGamesRepository(
-	connectionHandler *db.ConnectionHandler,
-	dbHandler db.Handler,
-	uuidGenerator uuid.Generator,
-) GamesRepository {
-	return GamesRepository{
-		connectionHandler: connectionHandler,
-		dbHandler: dbHandler,
-		uuidGenerator: uuidGenerator,
-	}
+func NewGamesRepository(dbHandler db.Handler) GamesRepository {
+	return GamesRepository{dbHandler: dbHandler}
 }
 
-func (repository GamesRepository) Save(game *Game) error {
-	if game.ID == 0 {
-		return repository.connectionHandler.Create(game)
+func (repository GamesRepository) CreateGame(game *Game) error {
+	uuid, err := uuid.GenerateUuidString()
+	if err != nil {
+		return fmt.Errorf("create uuid for insert game: %w", err)
 	}
 
-	return repository.connectionHandler.Save(game)
+	game.UUID = uuid
+	game.CreatedAt = time.Now()
+	game.UpdatedAt = time.Now()
+
+	row := repository.dbHandler.QueryRow(
+		`INSERT INTO games (uuid, played_at, season_id, created_at, updated_at, deleted_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id`,
+		game.UUID,
+		game.PlayedAt,
+		game.Season.ID,
+		game.CreatedAt,
+		game.UpdatedAt,
+		nil,
+	)
+	err = row.Scan(game.ID)
+	if err != nil {
+		return fmt.Errorf("insert game: %w", err)
+	}
+
+	return nil
 }
 
 func (repository GamesRepository) Count() (int, error) {
-	return repository.connectionHandler.Count(&Game{})
-}
-
-func (repository GamesRepository) GetAll() (*[]Game, error) {
-	games := &[]Game{}
-
-	err := repository.connectionHandler.GetAll(games)
+	var count int
+	err := repository.dbHandler.
+		QueryRow("SELECT COUNT(*) FROM games").
+		Scan(&count)
 	if err != nil {
-		return &[]Game{}, err
+		return 0, fmt.Errorf("count games: %w", err)
 	}
 
-	return games, nil
+	return count, nil
+}
+
+func (repository GamesRepository) CountForSeason(season Season) (int, error) {
+	var count int
+
+	err := repository.dbHandler.
+		QueryRow("SELECT COUNT(*) FROM games WHERE season_id = $1", season.ID).
+		Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("count games: %w", err)
+	}
+
+	return count, nil
 }
 
 func getGamesColumns() string {

@@ -17,21 +17,14 @@ type Season struct {
 
 type SeasonsRepository struct {
 	dbHandler db.Handler
-	uuidGenerator uuid.Generator
 }
 
-func NewSeasonsRepository(
-	dbHandler db.Handler,
-	uuidGenerator uuid.Generator,
-) SeasonsRepository {
-	return SeasonsRepository{
-		dbHandler: dbHandler,
-		uuidGenerator: uuidGenerator,
-	}
+func NewSeasonsRepository(dbHandler db.Handler) SeasonsRepository {
+	return SeasonsRepository{dbHandler: dbHandler}
 }
 
 func (repository SeasonsRepository) CreateSeason(season *Season) error {
-	uuid, err := repository.uuidGenerator.GenerateUuidString()
+	uuid, err := uuid.GenerateUuidString()
 	if err != nil {
 		return fmt.Errorf("create uuid for insert season: %w", err)
 	}
@@ -72,27 +65,6 @@ func (repository SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error
 	if err != nil {
 		return Season{}, fmt.Errorf("query season by uuid: %w", err)
 	}
-
-	rows, err := repository.dbHandler.Query(
-		fmt.Sprintf(
-			`SELECT %s
-			FROM games
-			WHERE season_id = $1`,
-			getGamesColumns(),
-		),
-		season.ID,
-	)
-	if err != nil {
-		return Season{}, fmt.Errorf("query season games: %w", err)
-	}
-	defer rows.Close()
-
-	games, err := scanGames(rows)
-	if err != nil {
-		return Season{}, fmt.Errorf("scan row in query season games: %w", err)
-	}
-
-	season.Games = games
 
 	return season, nil
 }
@@ -166,7 +138,7 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 		args...,
 	)
 
-	err := row.Scan(row, &season)
+	err := scanSeason(row, &season)
 	if err != nil {
 		return Season{}, fmt.Errorf("scan row in query active season: %w", err)
 	}
@@ -176,12 +148,12 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 
 func scanSeason(row db.Row, season *Season) error {
 	return row.Scan(
-		season.ID,
-		season.UUID,
-		season.CreatedAt,
-		season.UpdatedAt,
-		season.Name,
-		season.Active,
+		&season.ID,
+		&season.UUID,
+		&season.CreatedAt,
+		&season.UpdatedAt,
+		&season.Name,
+		&season.Active,
 	)
 }
 

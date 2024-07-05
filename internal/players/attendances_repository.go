@@ -3,7 +3,6 @@ package players
 import (
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
-	"github.com/spie/fskick/internal/uuid"
 )
 
 type Attendance struct {
@@ -18,18 +17,15 @@ type Attendance struct {
 type AttendancesRepository struct {
 	connectionHandler *db.ConnectionHandler
 	dbHandler db.Handler
-	uuidGenerator uuid.Generator
 }
 
 func NewAttendancesRepository(
 	connectionHandler *db.ConnectionHandler,
 	dbHandler db.Handler,
-	uuidGenerator uuid.Generator,
 ) AttendancesRepository {
 	return AttendancesRepository{
 		connectionHandler: connectionHandler,
 		dbHandler: dbHandler,
-		uuidGenerator: uuidGenerator,
 	}
 }
 

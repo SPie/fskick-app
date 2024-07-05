@@ -66,7 +66,7 @@ func (manager Manager) CreateGame(playedAt time.Time) (*Game, error) {
 
 	game := &Game{Season: &activeSeason, PlayedAt: playedAt}
 
-	err = manager.gameRepository.Save(game)
+	err = manager.gameRepository.CreateGame(game)
 	if err != nil {
 		return &Game{}, err
 	}
@@ -89,6 +89,10 @@ func (manager Manager) GetSeasonByName(name string) (Season, error) {
 
 func (manager Manager) GetGamesCount() (int, error) {
 	return manager.gameRepository.Count()
+}
+
+func (manager Manager) GetGamesCountForSeason(season Season) (int, error) {
+	return manager.gameRepository.CountForSeason(season)
 }
 
 func (manager Manager) GetSeasonByUuid(uuid string) (Season, error) {
