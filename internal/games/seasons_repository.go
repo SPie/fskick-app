@@ -10,24 +10,21 @@ import (
 
 type Season struct {
 	db.Model
-	Name   string  `gorm:"unique;not null" json:"name"`
-	Active bool    `gorm:"default:false" json:"active"`
+	Name   string  `json:"name"`
+	Active bool    `json:"active"`
 	Games  []Game `json:"games"`
 }
 
 type SeasonsRepository struct {
-	connectionHandler *db.ConnectionHandler
 	dbHandler db.Handler
 	uuidGenerator uuid.Generator
 }
 
 func NewSeasonsRepository(
-	connectionHandler *db.ConnectionHandler,
 	dbHandler db.Handler,
 	uuidGenerator uuid.Generator,
 ) SeasonsRepository {
 	return SeasonsRepository{
-		connectionHandler: connectionHandler,
 		dbHandler: dbHandler,
 		uuidGenerator: uuidGenerator,
 	}
@@ -62,22 +59,7 @@ func (repository SeasonsRepository) CreateSeason(season *Season) error {
 }
 
 func (repository SeasonsRepository) FindSeasonByName(name string) (Season, error) {
-	var season Season
-
-	row := repository.dbHandler.QueryRow(
-		`SELECT s.id, s.uuid, s.created_at, s.updated_at, s.name, s.active
-		FROM seasons s
-		WHERE s.name = $1`,
-		name,
-	)
-	err := row.Scan(
-		&season.ID,
-		&season.UUID,
-		&season.CreatedAt,
-		&season.UpdatedAt,
-		&season.Name,
-		&season.Active,
-	)
+	season, err := repository.selectSeason("name = $1", name)
 	if err != nil {
 		return Season{}, fmt.Errorf("query season by name: %w", err)
 	}
@@ -86,30 +68,18 @@ func (repository SeasonsRepository) FindSeasonByName(name string) (Season, error
 }
 
 func (repository SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error) {
-	var season Season
-
-	row := repository.dbHandler.QueryRow(
-		`SELECT s.id, s.uuid, s.created_at, s.updated_at, s.name, s.active
-		FROM seasons s
-		WHERE s.uuid = $1`,
-		uuid,
-	)
-	err := row.Scan(
-		&season.ID,
-		&season.UUID,
-		&season.CreatedAt,
-		&season.UpdatedAt,
-		&season.Name,
-		&season.Active,
-	)
+	season, err := repository.selectSeason("uuid = $1", uuid)
 	if err != nil {
 		return Season{}, fmt.Errorf("query season by uuid: %w", err)
 	}
 
 	rows, err := repository.dbHandler.Query(
-		`SELECT g.id, g.uuid, g.created_at, g.updated_at, g.deleted_at, g.played_at
-		FROM games g
-		WHERE season_id = $1`,
+		fmt.Sprintf(
+			`SELECT %s
+			FROM games
+			WHERE season_id = $1`,
+			getGamesColumns(),
+		),
 		season.ID,
 	)
 	if err != nil {
@@ -117,23 +87,9 @@ func (repository SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error
 	}
 	defer rows.Close()
 
-	games := []Game{}
-	for rows.Next() {
-		var game Game
-
-		err = rows.Scan(
-			&game.ID,
-			&game.UUID,
-			&game.CreatedAt,
-			&game.UpdatedAt,
-			&game.DeletedAt,
-			&game.PlayedAt,
-		)
-		if err != nil {
-			return Season{}, fmt.Errorf("scan row in query season games: %w", err)
-		}
-
-		games = append(games, game)
+	games, err := scanGames(rows)
+	if err != nil {
+		return Season{}, fmt.Errorf("scan row in query season games: %w", err)
 	}
 
 	season.Games = games
@@ -142,54 +98,22 @@ func (repository SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error
 }
 
 func (repository SeasonsRepository) GetAll() ([]Season, error) {
-	rows, err := repository.dbHandler.Query(`
-		SELECT s.id, s.uuid, s.created_at, s.updated_at, s.name, s.active
-		FROM seasons s
-	`)
+	rows, err := repository.dbHandler.Query(fmt.Sprintf(`SELECT %s FROM seasons`, getSeasonsColumns()))
 	if err != nil {
 		return []Season{}, fmt.Errorf("query all seasons: %w", err)
 	}
 	defer rows.Close()
 
-	seasons := []Season{}
-	for rows.Next() {
-		var season Season
-
-		err = rows.Scan(
-			&season.ID,
-			&season.UUID,
-			&season.CreatedAt,
-			&season.UpdatedAt,
-			&season.Name,
-			&season.Active,
-		)
-		if err != nil {
-			return []Season{}, fmt.Errorf("scan row in query all seasons: %w", err)
-		}
-
-		seasons = append(seasons, season)
+	seasons, err := scanSeasons(rows)
+	if err != nil {
+		return []Season{}, fmt.Errorf("scan row in query all seasons: %w", err)
 	}
 
 	return seasons, nil
 }
 
 func (repository SeasonsRepository) FindActiveSeason() (Season, error) {
-	var season Season
-
-	row := repository.dbHandler.QueryRow(
-		`SELECT s.id, s.uuid, s.created_at, s.updated_at, s.name, s.active
-		FROM seasons s
-		WHERE s.active = true`,
-	)
-
-	err := row.Scan(
-		&season.ID,
-		&season.UUID,
-		&season.CreatedAt,
-		&season.UpdatedAt,
-		&season.Name,
-		&season.Active,
-	)
+	season, err := repository.selectSeason("active = true")
 	if err != nil {
 		return Season{}, fmt.Errorf("scan row in query active season: %w", err)
 	}
@@ -223,4 +147,63 @@ func (repository SeasonsRepository) ActivateSeason(season *Season) error {
 	season.Active = true
 
 	return nil
+}
+
+func getSeasonsColumns() string {
+	return "id, uuid, created_at, updated_at, name, active"
+}
+
+func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any) (Season, error) {
+	var season Season
+	row := repository.dbHandler.QueryRow(
+		fmt.Sprintf(
+			`SELECT %s
+			FROM seasons
+			WHERE %s`,
+			getSeasonsColumns(),
+			whereQuery,
+		),
+		args...,
+	)
+
+	err := row.Scan(row, &season)
+	if err != nil {
+		return Season{}, fmt.Errorf("scan row in query active season: %w", err)
+	}
+
+	return season, nil
+}
+
+func scanSeason(row db.Row, season *Season) error {
+	return row.Scan(
+		season.ID,
+		season.UUID,
+		season.CreatedAt,
+		season.UpdatedAt,
+		season.Name,
+		season.Active,
+	)
+}
+
+func scanSeasons(rows db.Rows) ([]Season, error) {
+	var seasons []Season
+	for rows.Next() {
+		var season Season
+
+		err := rows.Scan(
+			&season.ID,
+			&season.UUID,
+			&season.CreatedAt,
+			&season.UpdatedAt,
+			&season.Name,
+			&season.Active,
+		)
+		if err != nil {
+			return []Season{}, fmt.Errorf("scan season rows: %w", err)
+		}
+
+		seasons = append(seasons, season)
+	}
+
+	return seasons, nil
 }

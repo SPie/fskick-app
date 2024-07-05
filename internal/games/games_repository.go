@@ -1,6 +1,7 @@
 package games
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spie/fskick/internal/db"
@@ -50,6 +51,33 @@ func (repository GamesRepository) GetAll() (*[]Game, error) {
 	err := repository.connectionHandler.GetAll(games)
 	if err != nil {
 		return &[]Game{}, err
+	}
+
+	return games, nil
+}
+
+func getGamesColumns() string {
+	return "id, uuid, created_at, updated_at, deleted_at, played_at"
+}
+
+func scanGames(rows db.Rows) ([]Game, error) {
+	var games []Game
+	for rows.Next() {
+		var game Game
+
+		err := rows.Scan(
+			&game.ID,
+			&game.UUID,
+			&game.CreatedAt,
+			&game.UpdatedAt,
+			&game.DeletedAt,
+			&game.PlayedAt,
+		)
+		if err != nil {
+			return []Game{}, fmt.Errorf("scan games: %w", err)
+		}
+
+		games = append(games, game)
 	}
 
 	return games, nil

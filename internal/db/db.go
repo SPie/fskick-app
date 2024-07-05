@@ -29,6 +29,22 @@ func CreateDbConfig(database string, withDebug bool, withLog bool) DbConfig {
 	}
 }
 
+type Row interface {
+	Scan(dest ...any) error
+}
+
+type Rows interface {
+	Next() bool
+	Scan(dest ...any) error
+	Close() error
+}
+
+type Transaction interface {
+	Commit() error
+	Exec(query string, args ...any) (sql.Result, error)
+	Rollback() error
+}
+
 type Handler struct {
 	conn *sql.DB
 }
@@ -42,15 +58,15 @@ func OpenDbHandler(cfg DbConfig) (Handler, error) {
 	return Handler{conn: conn}, nil
 }
 
-func (handler Handler) Query(query string, args ...any) (*sql.Rows, error) {
+func (handler Handler) Query(query string, args ...any) (Rows, error) {
 	return handler.conn.Query(query, args...)
 }
 
-func (handler Handler) QueryRow(query string, args ...any) *sql.Row {
+func (handler Handler) QueryRow(query string, args ...any) Row {
 	return handler.conn.QueryRow(query, args...)
 }
 
-func (handler Handler) Begin() (*sql.Tx, error) {
+func (handler Handler) Begin() (Transaction, error) {
 	return handler.conn.Begin()
 }
 

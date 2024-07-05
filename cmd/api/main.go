@@ -38,7 +38,7 @@ func main() {
 	uuidGenerator := uuid.NewGenerator()
 
 	gamesRepository := games.NewGamesRepository(connectionHandler, dbHandler, uuidGenerator)
-	seasonsRepository := games.NewSeasonsRepository(connectionHandler, dbHandler, uuidGenerator)
+	seasonsRepository := games.NewSeasonsRepository(dbHandler, uuidGenerator)
 	gamesManager := games.NewManager(gamesRepository, seasonsRepository)
 
 	playersRepository := players.NewPlayerRepository(connectionHandler, dbHandler, uuidGenerator)
