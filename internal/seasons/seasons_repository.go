@@ -1,4 +1,4 @@
-package games
+package seasons
 
 import (
 	"fmt"
@@ -8,11 +8,14 @@ import (
 	"github.com/spie/fskick/internal/uuid"
 )
 
+var (
+	ErrSeasonNotFound = db.ErrNotFound
+)
+
 type Season struct {
 	db.Model
 	Name   string  `json:"name"`
 	Active bool    `json:"active"`
-	Games  []Game `json:"games"`
 }
 
 type SeasonsRepository struct {
@@ -43,7 +46,7 @@ func (repository SeasonsRepository) CreateSeason(season *Season) error {
 		nil,
 		season.Active,
 	)
-	err = row.Scan(season.ID)
+	err = row.Scan(&season.ID)
 	if err != nil {
 		return fmt.Errorf("insert season: %w", err)
 	}

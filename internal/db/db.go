@@ -15,6 +15,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+var (
+	ErrNotFound = sql.ErrNoRows
+)
+
 type DbConfig struct {
 	database string
 	withDebug bool

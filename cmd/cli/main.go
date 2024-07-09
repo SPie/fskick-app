@@ -8,6 +8,7 @@ import (
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/seasons"
 	"github.com/spie/fskick/migrations"
 )
 
@@ -34,15 +35,17 @@ func main() {
 	}
 	defer connectionHandler.Close()
 
+	seasonsRepository := seasons.NewSeasonsRepository(dbHandler)
+	seasonManager := seasons.NewManager(seasonsRepository)
+
 	gamesRepository := games.NewGamesRepository(dbHandler)
-	seasonsRepository := games.NewSeasonsRepository(dbHandler)
-	gamesManager := games.NewManager(gamesRepository, seasonsRepository)
+	gamesManager := games.NewManager(gamesRepository, seasonManager)
 
 	playersRepository := players.NewPlayerRepository(connectionHandler, dbHandler)
 	attentanceRepository := players.NewAttendancesRepository(connectionHandler, dbHandler)
 	playersManager := players.NewManager(playersRepository, attentanceRepository)
 
-	if err := commands.NewRootCommand(playersManager, gamesManager).Execute(); err != nil {
+	if err := commands.NewRootCommand(playersManager, gamesManager, seasonManager).Execute(); err != nil {
 		log.Fatal(err)
 	}
 }

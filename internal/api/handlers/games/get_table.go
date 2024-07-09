@@ -4,8 +4,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	g "github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type seasonResponse struct {
@@ -17,9 +18,19 @@ type seasonResponse struct {
 	GamesCount int `json:"gamesCount"`
 }
 
-func GetTable(playersManager players.Manager, gamesManager g.Manager) gin.HandlerFunc {
+func GetTable(
+	playersManager players.Manager,
+	gamesManager games.Manager,
+	seasonsManager seasons.Manager,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		playerStats, season, err := getTable(playersManager, gamesManager, "", c.DefaultQuery("sort", players.SortByPointsRatio))
+		playerStats, season, err := getTable(
+			playersManager,
+			gamesManager,
+			seasonsManager,
+			"",
+			c.DefaultQuery("sort", players.SortByPointsRatio),
+		)
 		if err != nil {
 			c.Error(err)
 			return
@@ -36,7 +47,11 @@ type getTableForSeasonRequest struct {
 	Season string `uri:"season" binding:"required"`
 }
 
-func GetTableForSeason(playersManager players.Manager, gamesManager g.Manager) gin.HandlerFunc {
+func GetTableForSeason(
+	playersManager players.Manager,
+	gamesManager games.Manager,
+	seasonsManager seasons.Manager,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request getTableForSeasonRequest
 		if err := c.ShouldBindUri(&request); err != nil {
@@ -44,7 +59,13 @@ func GetTableForSeason(playersManager players.Manager, gamesManager g.Manager) g
 			return
 		}
 
-		playerStats, season, err := getTable(playersManager, gamesManager, request.Season, c.DefaultQuery("sort", players.SortByPointsRatio))
+		playerStats, season, err := getTable(
+			playersManager,
+			gamesManager,
+			seasonsManager,
+			request.Season,
+			c.DefaultQuery("sort", players.SortByPointsRatio),
+		)
 		if err != nil {
 			c.Error(err)
 			return
@@ -62,7 +83,11 @@ type getTableForPlayerRequest struct {
 	Player string `uri:"player" binding:"required"`
 }
 
-func GetTableForPlayer(playersManager players.Manager, gamesManager g.Manager) gin.HandlerFunc {
+func GetTableForPlayer(
+	playersManager players.Manager,
+	gamesManager games.Manager,
+	seasonsManager seasons.Manager,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request getTableForPlayerRequest
 		err := c.ShouldBindUri(&request)
@@ -71,7 +96,13 @@ func GetTableForPlayer(playersManager players.Manager, gamesManager g.Manager) g
 			return
 		}
 
-		playersStats, season, err := getTable(playersManager, gamesManager, request.Season, c.DefaultQuery("sort", players.SortByPointsRatio))
+		playersStats, season, err := getTable(
+			playersManager,
+			gamesManager,
+			seasonsManager,
+			request.Season,
+			c.DefaultQuery("sort", players.SortByPointsRatio),
+		)
 		if err != nil {
 			c.Error(err)
 			return
@@ -96,11 +127,12 @@ func GetTableForPlayer(playersManager players.Manager, gamesManager g.Manager) g
 
 func getTable(
 	playersManager players.Manager,
-	gamesManager g.Manager,
+	gamesManager games.Manager,
+	seasonsManager seasons.Manager,
 	seasonUuid string,
 	sort string,
 ) (*[]players.PlayerStats, seasonResponse, error) {
-	season, err := getSeason(gamesManager, seasonUuid)
+	season, err := getSeason(seasonsManager, seasonUuid)
 	if err != nil {
 		return &[]players.PlayerStats{}, seasonResponse{}, err
 	}
@@ -123,15 +155,15 @@ func getTable(
 	return playerStats, seasonRes, nil
 }
 
-func getSeason(gamesManager g.Manager, seasonUuid string) (g.Season, error) {
+func getSeason(seasonsManager seasons.Manager, seasonUuid string) (seasons.Season, error) {
 	if seasonUuid != "" {
-		return gamesManager.GetSeasonByUuid(seasonUuid)
+		return seasonsManager.GetSeasonByUuid(seasonUuid)
 	}
 
-	return gamesManager.ActiveSeason()
+	return seasonsManager.ActiveSeason()
 }
 
-func getSeasonResponse(season g.Season) seasonResponse {
+func getSeasonResponse(season seasons.Season) seasonResponse {
 	return seasonResponse{
 		UUID: season.UUID,
 		Name: season.Name,

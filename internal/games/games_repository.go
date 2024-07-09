@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/spie/fskick/internal/db"
+	"github.com/spie/fskick/internal/seasons"
 	"github.com/spie/fskick/internal/uuid"
 )
 
@@ -12,7 +13,7 @@ type Game struct {
 	db.Model
 	PlayedAt time.Time `json:"playedAt"`
 	SeasonID uint      `json:"-"`
-	Season   *Season   `json:"season"`
+	Season   *seasons.Season   `json:"season"`
 }
 
 type GamesRepository struct {
@@ -44,7 +45,7 @@ func (repository GamesRepository) CreateGame(game *Game) error {
 		game.UpdatedAt,
 		nil,
 	)
-	err = row.Scan(game.ID)
+	err = row.Scan(&game.ID)
 	if err != nil {
 		return fmt.Errorf("insert game: %w", err)
 	}
@@ -64,7 +65,7 @@ func (repository GamesRepository) Count() (int, error) {
 	return count, nil
 }
 
-func (repository GamesRepository) CountForSeason(season Season) (int, error) {
+func (repository GamesRepository) CountForSeason(season seasons.Season) (int, error) {
 	var count int
 
 	err := repository.dbHandler.

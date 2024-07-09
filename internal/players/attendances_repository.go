@@ -29,59 +29,33 @@ func NewAttendancesRepository(
 	}
 }
 
-func (repository AttendancesRepository) Save(attendance *Attendance) error {
-	return repository.connectionHandler.Save(attendance)
+func (repository AttendancesRepository) Create(attendances *[]Attendance) error {
+	return repository.connectionHandler.Create(attendances)
 }
 
-func (repository AttendancesRepository) FindAttendancesForSeason(season *games.Season) (*[]Attendance, error) {
-	attendances := &[]Attendance{}
-	err := repository.connectionHandler.
-		Joins("Player").
-		Joins("Game").
-		Find(attendances, &Attendance{Game: &games.Game{Season: season}})
-	if err != nil {
-		return &[]Attendance{}, err
-	}
-
-	return attendances, nil
-}
-
-func (repository AttendancesRepository) FindAttendancesForPlayer(player *Player) (*[]Attendance, error) {
-	attendances := &[]Attendance{}
-	err := repository.connectionHandler.
-		Joins("Player").
-		Preload("Game").
-		Find(attendances, &Attendance{PlayerID: player.ID})
-	if err != nil {
-		return &[]Attendance{}, err
-	}
-
-	return attendances, nil
-}
-
-func (repository AttendancesRepository) FindFellowAttendancesForPlayer(player *Player) (*[]Attendance, error) {
+func (repository AttendancesRepository) FindFellowAttendancesForPlayer(player Player) ([]Attendance, error) {
 	fellowWinnerAttendances, err := repository.findFellowAttendancesForPlayerByWin(player, true)
 	if err != nil {
-		return &[]Attendance{}, err
+		return []Attendance{}, err
 	}
 
 	fellowLoserAttendances, err := repository.findFellowAttendancesForPlayerByWin(player, false)
 	if err != nil {
-		return &[]Attendance{}, err
+		return []Attendance{}, err
 	}
 
-	fellowAttendances := append(*fellowWinnerAttendances, *fellowLoserAttendances...)
+	fellowAttendances := append(fellowWinnerAttendances, fellowLoserAttendances...)
 
-	return &fellowAttendances, nil
+	return fellowAttendances, nil
 }
 
-func (repository AttendancesRepository) findFellowAttendancesForPlayerByWin(player *Player, win bool) (*[]Attendance, error) {
+func (repository AttendancesRepository) findFellowAttendancesForPlayerByWin(player Player, win bool) ([]Attendance, error) {
 	attendances := &[]Attendance{}
 	err := repository.connectionHandler.
 		Where("win = ? AND player_id = ?", win, player.ID).
 		Find(attendances)
 	if err != nil {
-		return &[]Attendance{}, err
+		return []Attendance{}, err
 	}
 
 	fellowAttendances := []Attendance{}
@@ -90,10 +64,10 @@ func (repository AttendancesRepository) findFellowAttendancesForPlayerByWin(play
 		Where("win = ? AND game_id IN ? AND player_id != ?", win, getGameIdsFromAttendances(attendances), player.ID).
 		Find(&fellowAttendances)
 	if err != nil {
-		return &[]Attendance{}, err
+		return []Attendance{}, err
 	}
 
-	return &fellowAttendances, nil
+	return fellowAttendances, nil
 }
 
 func getGameIdsFromAttendances(attendances *[]Attendance) []uint {
@@ -103,8 +77,4 @@ func getGameIdsFromAttendances(attendances *[]Attendance) []uint {
 	}
 
 	return gameIds
-}
-
-func (repository AttendancesRepository) Create(attendances *[]Attendance) error {
-	return repository.connectionHandler.Create(attendances)
 }

@@ -9,16 +9,26 @@ import (
 	"github.com/spie/fskick/internal/cli"
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type getTableCommand struct {
 	cc             *cobra.Command
 	gamesManager   games.Manager
 	playersManager players.PlayerStatsCalculator
+	seasonsManager seasons.Manager
 }
 
-func newGetTableCommand(gamesManager games.Manager, playersManager players.PlayerStatsCalculator) *getTableCommand {
-	getTableCommand := &getTableCommand{gamesManager: gamesManager, playersManager: playersManager}
+func newGetTableCommand(
+	gamesManager games.Manager,
+	playersManager players.PlayerStatsCalculator,
+	seasonsManager seasons.Manager,
+) *getTableCommand {
+	getTableCommand := &getTableCommand{
+		gamesManager: gamesManager,
+		playersManager: playersManager,
+		seasonsManager: seasonsManager,
+	}
 
 	cc := &cobra.Command{
 		Use:   "table",
@@ -66,14 +76,14 @@ func (tableCommand *getTableCommand) getTable(cmd *cobra.Command, args []string)
 	return nil
 }
 
-func (tableCommand *getTableCommand) getSeason(args []string) (games.Season, error) {
+func (tableCommand *getTableCommand) getSeason(args []string) (seasons.Season, error) {
 	if len(args) > 0 {
-		season, err := tableCommand.gamesManager.GetSeasonByName(args[0])
+		season, err := tableCommand.seasonsManager.GetSeasonByName(args[0])
 
 		return season, err
 	}
 
-	season, err := tableCommand.gamesManager.ActiveSeason()
+	season, err := tableCommand.seasonsManager.ActiveSeason()
 
 	return season, err
 }

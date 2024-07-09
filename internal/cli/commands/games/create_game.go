@@ -81,9 +81,9 @@ func getPlayerNamesFromFlag(names string) []string {
 }
 
 func getPlayerNamesAsString(team players.Team) string {
-	names := make([]string, len(*team))
-	for i := 0; i < len(*team); i++ {
-		names[i] = (*team)[i].Name
+	names := make([]string, len(team))
+	for i := 0; i < len(team); i++ {
+		names[i] = (team)[i].Name
 	}
 
 	return strings.Join(names, ",")

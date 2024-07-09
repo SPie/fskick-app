@@ -8,6 +8,7 @@ import (
 	"github.com/spie/fskick/internal/cli"
 	"github.com/spie/fskick/internal/games"
 	p "github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type getPlayersCommand struct {
@@ -16,8 +17,14 @@ type getPlayersCommand struct {
 	gamesManager   games.Manager
 }
 
-func newGetPlayersCommand(playersManager p.PlayerStatsCalculator, gamesManager games.Manager) *getPlayersCommand {
-	getPlayersCommand := getPlayersCommand{playersManager: playersManager, gamesManager: gamesManager}
+func newGetPlayersCommand(
+	playersManager p.PlayerStatsCalculator,
+	gamesManager games.Manager,
+) *getPlayersCommand {
+	getPlayersCommand := getPlayersCommand{
+		playersManager: playersManager,
+		gamesManager: gamesManager,
+	}
 
 	cc := &cobra.Command{
 		Use:   "get [name]",
@@ -43,7 +50,7 @@ func (getPlayersCommand *getPlayersCommand) getPlayers(cmd *cobra.Command, args 
 		return err
 	}
 
-	playersStats, err := getPlayersCommand.playersManager.GetPlayersStats(games.Season{})
+	playersStats, err := getPlayersCommand.playersManager.GetPlayersStats(seasons.Season{})
 	if err != nil {
 		return err
 	}

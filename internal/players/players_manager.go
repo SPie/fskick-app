@@ -8,7 +8,7 @@ import (
 
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
-	"gorm.io/gorm"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type Player struct {
@@ -30,14 +30,14 @@ type PlayerStats struct {
 	Points      int     `json:"points"`
 }
 
-type Team *[]Player
+type Team []Player
 
 type PlayerCreator interface {
-	CreatePlayer(name string) (*Player, error)
+	CreatePlayer(name string) (Player, error)
 }
 
 type PlayerStatsCalculator interface {
-	GetPlayersStats(season games.Season) (*[]PlayerStats, error)
+	GetPlayersStats(season seasons.Season) (*[]PlayerStats, error)
 	GetSortFunction(sortName string) sortFunction
 	GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error)
 }
@@ -56,20 +56,20 @@ func NewManager(playerRepository PlayerRepository, attendancesRepository Attenda
 	return Manager{playerRepository: playerRepository, attendancesRepository: attendancesRepository}
 }
 
-func (manager Manager) CreatePlayer(name string) (*Player, error) {
+func (manager Manager) CreatePlayer(name string) (Player, error) {
 	_, err := manager.playerRepository.FindPlayerByName(name)
 	if err == nil {
-		return &Player{}, errors.New(fmt.Sprintf("Player with name %s exists", name))
+		return Player{}, errors.New(fmt.Sprintf("Player with name %s exists", name))
 	}
-	if err != gorm.ErrRecordNotFound {
-		return &Player{}, err
+	if !errors.Is(err, ErrPlayerNotFound) {
+		return Player{}, fmt.Errorf("Check for player with name in CreatePlayer: %w", err)
 	}
 
-	player := &Player{Name: name}
+	player := Player{Name: name}
 
-	err = manager.playerRepository.Save(player)
+	err = manager.playerRepository.CreatePlayer(&player)
 	if err != nil {
-		return &Player{}, err
+		return Player{}, err
 	}
 
 	return player, nil
@@ -78,12 +78,12 @@ func (manager Manager) CreatePlayer(name string) (*Player, error) {
 func (manager Manager) GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error) {
 	winners, err := manager.getTeamByNames(winnerNames)
 	if err != nil {
-		return &[]Player{}, &[]Player{}, err
+		return []Player{}, []Player{}, err
 	}
 
 	losers, err := manager.getTeamByNames(loserNames)
 	if err != nil {
-		return &[]Player{}, &[]Player{}, err
+		return []Player{}, []Player{}, err
 	}
 
 	return winners, losers, nil
@@ -91,16 +91,16 @@ func (manager Manager) GetTeamsByNames(winnerNames []string, loserNames []string
 
 func (manager Manager) getTeamByNames(names []string) (Team, error) {
 	if len(names) < 1 {
-		return &[]Player{}, nil
+		return []Player{}, nil
 	}
 
 	players, err := manager.playerRepository.FindPlayersByNames(names)
 	if err != nil {
-		return &[]Player{}, err
+		return []Player{}, err
 	}
 
-	if len(*players) != len(names) {
-		return &[]Player{}, errors.New(fmt.Sprintf("Players not found: %s", strings.Join(getIncorrectPlayerNames(names, players), ",")))
+	if len(players) != len(names) {
+		return []Player{}, errors.New(fmt.Sprintf("Players not found: %s", strings.Join(getIncorrectPlayerNames(names, players), ",")))
 	}
 
 	return players, nil
@@ -109,21 +109,21 @@ func (manager Manager) getTeamByNames(names []string) (Team, error) {
 func (manager Manager) CreateAttendances(game *games.Game, winners Team, losers Team) (Team, Team, error) {
 	attendances := append(*createAttendances(game, winners, true), *createAttendances(game, losers, false)...)
 	if len(attendances) < 1 {
-		return &[]Player{}, &[]Player{}, errors.New("No attendances for game")
+		return []Player{}, []Player{}, errors.New("No attendances for game")
 	}
 
 	err := manager.attendancesRepository.Create(&attendances)
 	if err != nil {
-		return &[]Player{}, &[]Player{}, err
+		return []Player{}, []Player{}, err
 	}
 
 	return winners, losers, err
 }
 
-func getIncorrectPlayerNames(names []string, players *[]Player) []string {
+func getIncorrectPlayerNames(names []string, players []Player) []string {
 	incorrectNames := []string{}
 	playerNames := map[string]string{}
-	for _, player := range *players {
+	for _, player := range players {
 		playerNames[player.Name] = player.Name
 	}
 
@@ -137,8 +137,8 @@ func getIncorrectPlayerNames(names []string, players *[]Player) []string {
 }
 
 func createAttendances(game *games.Game, team Team, winning bool) *[]Attendance {
-	attendances := make([]Attendance, len(*team))
-	for i, player := range *team {
+	attendances := make([]Attendance, len(team))
+	for i, player := range team {
 		attendancePlayer := player
 		attendances[i] = Attendance{Game: game, Player: &attendancePlayer, Win: winning}
 	}
@@ -146,7 +146,7 @@ func createAttendances(game *games.Game, team Team, winning bool) *[]Attendance 
 	return &attendances
 }
 
-func (manager Manager) GetPlayersStats(season games.Season) (*[]PlayerStats, error) {
+func (manager Manager) GetPlayersStats(season seasons.Season) (*[]PlayerStats, error) {
 	players, err := manager.getPlayersForPlayerStats(season)
 	if err != nil {
 		return &[]PlayerStats{}, err
@@ -158,7 +158,7 @@ func (manager Manager) GetPlayersStats(season games.Season) (*[]PlayerStats, err
 	return playersStats, nil
 }
 
-func (manager Manager) getPlayersForPlayerStats(season games.Season) (*[]Player, error) {
+func (manager Manager) getPlayersForPlayerStats(season seasons.Season) ([]Player, error) {
 	if season.ID != 0 {
 		return manager.playerRepository.FindPlayersPlayedInSeason(season)
 	}
@@ -166,10 +166,10 @@ func (manager Manager) getPlayersForPlayerStats(season games.Season) (*[]Player,
 	return manager.playerRepository.AllPlayersWithAttendances()
 }
 
-func initializePlayerStatsAndGetMaxGames(players *[]Player) (*[]PlayerStats, int) {
+func initializePlayerStatsAndGetMaxGames(players []Player) (*[]PlayerStats, int) {
 	maxGames := 0
-	playersStats := make([]PlayerStats, len(*players))
-	for i, player := range *players {
+	playersStats := make([]PlayerStats, len(players))
+	for i, player := range players {
 		wins := 0
 		for _, attendance := range *player.Attendances {
 			if attendance.Win {
@@ -221,7 +221,7 @@ func (manager Manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error
 
 	playerMap := map[uint]*Player{}
 
-	for _, attendance := range *attendances {
+	for _, attendance := range attendances {
 		if _, ok := playerMap[attendance.PlayerID]; !ok {
 			fellowPlayer := attendance.Player
 			fellowPlayer.Attendances = &[]Attendance{}
@@ -239,7 +239,7 @@ func (manager Manager) GetFavoriteTeam(playerUuid string) (*[]PlayerStats, error
 		players = append(players, *fellowPlayer)
 	}
 
-	playerStats, maxGames := initializePlayerStatsAndGetMaxGames(&players)
+	playerStats, maxGames := initializePlayerStatsAndGetMaxGames(players)
 	calculateAndSetPointsRatio(playerStats, maxGames)
 
 	return playerStats, nil

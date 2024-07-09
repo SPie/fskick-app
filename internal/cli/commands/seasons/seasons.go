@@ -5,6 +5,7 @@ import (
 
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type SeasonsCommand interface {
@@ -15,20 +16,24 @@ type seasonsCommand struct {
 	cc *cobra.Command
 }
 
-func NewSeasonsCommand(gamesManager games.Manager, playersManager players.PlayerStatsCalculator) SeasonsCommand {
+func NewSeasonsCommand(
+	gamesManager games.Manager,
+	playersManager players.PlayerStatsCalculator,
+	seasonsManager seasons.Manager,
+) SeasonsCommand {
 	seasonsCommand := seasonsCommand{cc: &cobra.Command{
 		Use:   "seasons",
 		Short: "Commands to handle seasons",
 		Long:  "All commands to handle seasons like creating new seasons, switch active seasons, show tables...",
 	}}
 
-	createSeasonCommand := newCreateSeasonCommand(gamesManager)
+	createSeasonCommand := newCreateSeasonCommand(seasonsManager)
 	seasonsCommand.cc.AddCommand(createSeasonCommand.cc)
-	getSeasonsCommand := newGetSeasonsCommand(gamesManager)
+	getSeasonsCommand := newGetSeasonsCommand(seasonsManager)
 	seasonsCommand.cc.AddCommand(getSeasonsCommand.cc)
-	activateSeasonComand := newActivateSeasonCommand(gamesManager)
+	activateSeasonComand := newActivateSeasonCommand(seasonsManager)
 	seasonsCommand.cc.AddCommand(activateSeasonComand.cc)
-	tableCommand := newGetTableCommand(gamesManager, playersManager)
+	tableCommand := newGetTableCommand(gamesManager, playersManager, seasonsManager)
 	seasonsCommand.cc.AddCommand(tableCommand.cc)
 
 	return &seasonsCommand

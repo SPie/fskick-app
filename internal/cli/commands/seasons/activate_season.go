@@ -6,16 +6,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spie/fskick/internal/cli"
-	"github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/seasons"
 )
 
 type activateSeasonCommand struct {
-	cc           *cobra.Command
-	gamesManager games.Manager
+	cc *cobra.Command
+	seasonsManager seasons.Manager
 }
 
-func newActivateSeasonCommand(gamesManager games.Manager) *activateSeasonCommand {
-	activateSeasonCommand := activateSeasonCommand{gamesManager: gamesManager}
+func newActivateSeasonCommand(seasonsManager seasons.Manager) *activateSeasonCommand {
+	activateSeasonCommand := activateSeasonCommand{seasonsManager: seasonsManager}
 
 	cc := &cobra.Command{
 		Use:   "activate [name]",
@@ -31,7 +31,7 @@ func newActivateSeasonCommand(gamesManager games.Manager) *activateSeasonCommand
 }
 
 func (activateSeasonCommand *activateSeasonCommand) activateSeason(cmd *cobra.Command, args []string) error {
-	season, err := activateSeasonCommand.gamesManager.ActivateSeason(args[0])
+	season, err := activateSeasonCommand.seasonsManager.ActivateSeason(args[0])
 	if err != nil {
 		return err
 	}
