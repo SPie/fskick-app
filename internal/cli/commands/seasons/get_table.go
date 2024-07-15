@@ -8,25 +8,21 @@ import (
 
 	"github.com/spie/fskick/internal/cli"
 	"github.com/spie/fskick/internal/games"
-	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
 )
 
 type getTableCommand struct {
 	cc             *cobra.Command
 	gamesManager   games.Manager
-	playersManager players.PlayerStatsCalculator
 	seasonsManager seasons.Manager
 }
 
 func newGetTableCommand(
 	gamesManager games.Manager,
-	playersManager players.PlayerStatsCalculator,
 	seasonsManager seasons.Manager,
 ) *getTableCommand {
 	getTableCommand := &getTableCommand{
 		gamesManager: gamesManager,
-		playersManager: playersManager,
 		seasonsManager: seasonsManager,
 	}
 
@@ -55,19 +51,17 @@ func (tableCommand *getTableCommand) getTable(cmd *cobra.Command, args []string)
 		return err
 	}
 
-	playerStats, err := tableCommand.playersManager.GetPlayersStats(season)
+	playerStats, err := tableCommand.gamesManager.GetPlayerStatsForSeason(season, sortName)
 	if err != nil {
 		return err
 	}
-
-	tableCommand.playersManager.GetSortFunction(sortName)(playerStats)
 
 	gamesCount, err := tableCommand.gamesManager.GetGamesCountForSeason(season)
 	if err != nil {
 		return err
 	}
 
-	head := cli.CreateTableHead(gamesCount, playerStats)
+	head := cli.CreateTableHead(gamesCount, len(playerStats))
 	tableEntries := cli.CreateTableEntries(gamesCount, playerStats)
 
 	cli.Print(fmt.Sprintf("Season: %s", season.Name))
@@ -95,10 +89,10 @@ func getSortName(cmd *cobra.Command) (string, error) {
 	}
 
 	if sortName == "" {
-		return players.SortByPointsRatio, nil
+		return "pointsRatio", nil
 	}
 
-	if sortName != players.SortByPointsRatio && sortName != players.SortByWins && sortName != players.SortByGames && sortName != players.SortByWinRatio {
+	if sortName != "pointsRatio" && sortName != "wins" && sortName != "games" && sortName != "winRatio" {
 		return "", errors.New("Sort flag has to be pointsRatio, games, wins or winRatio")
 	}
 

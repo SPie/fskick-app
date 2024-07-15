@@ -3,22 +3,19 @@ package players
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/spie/fskick/internal/games"
-	p "github.com/spie/fskick/internal/players"
 )
 
 type GetPlayersRequest struct {
 	Player string `uri:"player"`
 }
 
-func GetPlayers(playersManager p.PlayerStatsCalculator) gin.HandlerFunc {
+func GetPlayers(gamesManager games.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		playerStats, err := playersManager.GetPlayersStats(games.Season{})
+		playerStats, err := gamesManager.GetAllPlayerStats(c.DefaultQuery("sort", "pointsRatio"))
 		if err != nil {
 			c.Error(err)
 			return
 		}
-
-		playersManager.GetSortFunction(c.DefaultQuery("sort", p.SortByPointsRatio))(playerStats)
 
 		var request GetPlayersRequest
 		err = c.ShouldBindUri(&request)
@@ -37,12 +34,12 @@ func GetPlayers(playersManager p.PlayerStatsCalculator) gin.HandlerFunc {
 	}
 }
 
-func filterPlayersStatsForName(playersStats *[]p.PlayerStats, uuid string) *[]p.PlayerStats {
-	for _, playerStats := range *playersStats {
+func filterPlayersStatsForName(playersStats []games.PlayerStats, uuid string) []games.PlayerStats {
+	for _, playerStats := range playersStats {
 		if playerStats.Player.UUID == uuid {
-			return &[]p.PlayerStats{playerStats}
+			return []games.PlayerStats{playerStats}
 		}
 	}
 
-	return &[]p.PlayerStats{}
+	return []games.PlayerStats{}
 }

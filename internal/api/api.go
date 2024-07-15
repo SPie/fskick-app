@@ -30,13 +30,9 @@ func SetUp(
 			gamesHandlers.GetTableForSeason(playersManager, gamesManager, seasonsManager),
 		)
 
-		api.GET("/players", playersHandlers.GetPlayers(playersManager))
-		api.GET(
-			"/playsers/:player/seasons/:seasons",
-			gamesHandlers.GetTableForPlayer(playersManager, gamesManager, seasonsManager),
-		)
-		api.GET("/players/:player/team", playersHandlers.GetFavoriteTeam(playersManager))
-		api.GET("/players/:player", playersHandlers.GetPlayers(playersManager))
+		api.GET("/players", playersHandlers.GetPlayers(gamesManager))
+		api.GET("/players/:player/team", playersHandlers.GetFavoriteTeam(playersManager, gamesManager))
+		api.GET("/players/:player", playersHandlers.GetPlayers(gamesManager))
 
 		api.GET("/games/count", gamesHandlers.GetGamesCount(gamesManager))
 	}

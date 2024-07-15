@@ -28,7 +28,7 @@ func NewRootCommand(playersManager p.Manager, gamesManager g.Manager, seasonsMan
 
 	playersCommand := players.NewPlayersCommand(playersManager, gamesManager)
 	rootCommand.cc.AddCommand(playersCommand.GetPlayersCommand())
-	seasonsCommand := seasons.NewSeasonsCommand(gamesManager, playersManager, seasonsManagers)
+	seasonsCommand := seasons.NewSeasonsCommand(gamesManager, seasonsManagers)
 	rootCommand.cc.AddCommand(seasonsCommand.GetSeasonsCommand())
 	gamesCommand := games.NewGamesCommand(gamesManager, playersManager)
 	rootCommand.cc.AddCommand(gamesCommand.GetGamesCommand())

@@ -51,6 +51,8 @@ func (repository SeasonsRepository) CreateSeason(season *Season) error {
 		return fmt.Errorf("insert season: %w", err)
 	}
 
+	fmt.Printf("NEW SEASON: %d", season.ID)
+
 	return nil
 }
 

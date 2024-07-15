@@ -24,7 +24,7 @@ func NewPlayersCommand(playersManager p.Manager, gamesManager games.Manager) Pla
 
 	createPlayerCommand := newCreatePlayerCommand(playersManager)
 	playersCommand.cc.AddCommand(createPlayerCommand.cc)
-	getPlayersCommand := newGetPlayersCommand(playersManager, gamesManager)
+	getPlayersCommand := newGetPlayersCommand(gamesManager)
 	playersCommand.cc.AddCommand(getPlayersCommand.cc)
 
 	return &playersCommand

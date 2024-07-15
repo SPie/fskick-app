@@ -29,7 +29,7 @@ func GetTable(
 			gamesManager,
 			seasonsManager,
 			"",
-			c.DefaultQuery("sort", players.SortByPointsRatio),
+			c.DefaultQuery("sort", "pointsRatio"),
 		)
 		if err != nil {
 			c.Error(err)
@@ -64,7 +64,7 @@ func GetTableForSeason(
 			gamesManager,
 			seasonsManager,
 			request.Season,
-			c.DefaultQuery("sort", players.SortByPointsRatio),
+			c.DefaultQuery("sort", "pointsRatio"),
 		)
 		if err != nil {
 			c.Error(err)
@@ -83,47 +83,6 @@ type getTableForPlayerRequest struct {
 	Player string `uri:"player" binding:"required"`
 }
 
-func GetTableForPlayer(
-	playersManager players.Manager,
-	gamesManager games.Manager,
-	seasonsManager seasons.Manager,
-) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var request getTableForPlayerRequest
-		err := c.ShouldBindUri(&request)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		playersStats, season, err := getTable(
-			playersManager,
-			gamesManager,
-			seasonsManager,
-			request.Season,
-			c.DefaultQuery("sort", players.SortByPointsRatio),
-		)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		for _, playerStats := range *playersStats {
-			if playerStats.Player.Name == request.Player {
-				c.JSON(200, gin.H{
-					"season":      season,
-					"playerStats": playerStats,
-				})
-				return
-			}
-		}
-
-		c.JSON(200, gin.H{
-			"season":      season,
-			"playerStats": players.PlayerStats{},
-		})
-	}
-}
 
 func getTable(
 	playersManager players.Manager,
@@ -131,24 +90,22 @@ func getTable(
 	seasonsManager seasons.Manager,
 	seasonUuid string,
 	sort string,
-) (*[]players.PlayerStats, seasonResponse, error) {
+) ([]games.PlayerStats, seasonResponse, error) {
 	season, err := getSeason(seasonsManager, seasonUuid)
 	if err != nil {
-		return &[]players.PlayerStats{}, seasonResponse{}, err
+		return nil, seasonResponse{}, err
 	}
 
-	playerStats, err := playersManager.GetPlayersStats(season)
+	playerStats, err := gamesManager.GetPlayerStatsForSeason(season, sort)
 	if err != nil {
-		return &[]players.PlayerStats{}, seasonResponse{}, err
+		return nil, seasonResponse{}, err
 	}
-
-	playersManager.GetSortFunction(sort)(playerStats)
 
 	seasonRes := getSeasonResponse(season)
 
 	gamesCount, err := gamesManager.GetGamesCountForSeason(season)
 	if err != nil {
-		return &[]players.PlayerStats{}, seasonResponse{}, err
+		return nil, seasonResponse{}, err
 	}
 	seasonRes.GamesCount = gamesCount
 

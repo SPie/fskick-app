@@ -39,11 +39,11 @@ func main() {
 	seasonManager := seasons.NewManager(seasonsRepository)
 
 	gamesRepository := games.NewGamesRepository(dbHandler)
-	gamesManager := games.NewManager(gamesRepository, seasonManager)
+	attendanceRepository := games.NewAttendanceRepository(dbHandler)
+	gamesManager := games.NewManager(gamesRepository, attendanceRepository, seasonManager)
 
 	playersRepository := players.NewPlayerRepository(connectionHandler, dbHandler)
-	attentanceRepository := players.NewAttendancesRepository(connectionHandler, dbHandler)
-	playersManager := players.NewManager(playersRepository, attentanceRepository)
+	playersManager := players.NewManager(playersRepository)
 
 	err = api.SetUp(playersManager, gamesManager, seasonManager).Run(cfg.ApiHost)
 	if err != nil {

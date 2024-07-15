@@ -6,7 +6,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 
-	"github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/games"
 )
 
 func Print(output string) {
@@ -47,9 +47,9 @@ func transformEntries(entries [][]string) []table.Row {
 	return rows
 }
 
-func CreateTableHead(gamesCount int, playerStats *[]players.PlayerStats) []string {
+func CreateTableHead(gamesCount int, playersCount int) []string {
 	return []string{
-		fmt.Sprintf("Position (%d)", len(*playerStats)),
+		fmt.Sprintf("Position (%d)", playersCount),
 		"Name",
 		"Points Ratio",
 		"Points",
@@ -60,9 +60,9 @@ func CreateTableHead(gamesCount int, playerStats *[]players.PlayerStats) []strin
 	}
 }
 
-func CreateTableEntries(gamesCount int, playerStats *[]players.PlayerStats) [][]string {
-	tableEntries := make([][]string, len(*playerStats))
-	for i, playerStats := range *playerStats {
+func CreateTableEntries(gamesCount int, playerStats []games.PlayerStats) [][]string {
+	tableEntries := make([][]string, len(playerStats))
+	for i, playerStats := range playerStats {
 		tableEntries[i] = []string{
 			fmt.Sprint(playerStats.Position),
 			playerStats.Name,

@@ -46,6 +46,7 @@ type Rows interface {
 type Transaction interface {
 	Commit() error
 	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
 	Rollback() error
 }
 

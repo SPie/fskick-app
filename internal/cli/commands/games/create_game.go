@@ -51,12 +51,7 @@ func (createGameCommand *createGameCommand) CreateGame(cmd *cobra.Command, args 
 		return err
 	}
 
-	game, err := createGameCommand.gamesManager.CreateGame(playedAt)
-	if err != nil {
-		return err
-	}
-
-	winnersTeam, losersTeam, err := createGameCommand.playersManager.CreateAttendances(game, winners, losers)
+	_, err = createGameCommand.gamesManager.CreateGame(playedAt, winners, losers)
 	if err != nil {
 		return err
 	}
@@ -64,8 +59,8 @@ func (createGameCommand *createGameCommand) CreateGame(cmd *cobra.Command, args 
 	cli.PrintTable(
 		[]string{},
 		[][]string{
-			{"Winners", getPlayerNamesAsString(winnersTeam)},
-			{"Losers", getPlayerNamesAsString(losersTeam)},
+			{"Winners", winnerNames},
+			{"Losers", loserNames},
 		},
 	)
 
@@ -78,15 +73,6 @@ func getPlayerNamesFromFlag(names string) []string {
 	}
 
 	return strings.Split(names, ",")
-}
-
-func getPlayerNamesAsString(team players.Team) string {
-	names := make([]string, len(team))
-	for i := 0; i < len(team); i++ {
-		names[i] = (team)[i].Name
-	}
-
-	return strings.Join(names, ",")
 }
 
 func getPlayedAt(cmd *cobra.Command) (time.Time, error) {

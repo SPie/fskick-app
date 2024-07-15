@@ -7,22 +7,15 @@ import (
 
 	"github.com/spie/fskick/internal/cli"
 	"github.com/spie/fskick/internal/games"
-	p "github.com/spie/fskick/internal/players"
-	"github.com/spie/fskick/internal/seasons"
 )
 
 type getPlayersCommand struct {
 	cc             *cobra.Command
-	playersManager p.PlayerStatsCalculator
 	gamesManager   games.Manager
 }
 
-func newGetPlayersCommand(
-	playersManager p.PlayerStatsCalculator,
-	gamesManager games.Manager,
-) *getPlayersCommand {
+func newGetPlayersCommand(gamesManager games.Manager) *getPlayersCommand {
 	getPlayersCommand := getPlayersCommand{
-		playersManager: playersManager,
 		gamesManager: gamesManager,
 	}
 
@@ -50,18 +43,16 @@ func (getPlayersCommand *getPlayersCommand) getPlayers(cmd *cobra.Command, args 
 		return err
 	}
 
-	playersStats, err := getPlayersCommand.playersManager.GetPlayersStats(seasons.Season{})
+	playersStats, err := getPlayersCommand.gamesManager.GetAllPlayerStats(sortName)
 	if err != nil {
 		return err
 	}
-
-	getPlayersCommand.playersManager.GetSortFunction(sortName)(playersStats)
 
 	if len(args) > 0 {
 		playersStats = filterPlayerStatsByName(args[0], playersStats)
 	}
 
-	head := cli.CreateTableHead(gamesCount, playersStats)
+	head := cli.CreateTableHead(gamesCount, len(playersStats))
 	tableEntries := cli.CreateTableEntries(gamesCount, playersStats)
 
 	cli.PrintTable(head, tableEntries)
@@ -69,14 +60,14 @@ func (getPlayersCommand *getPlayersCommand) getPlayers(cmd *cobra.Command, args 
 	return nil
 }
 
-func filterPlayerStatsByName(name string, playersStats *[]p.PlayerStats) *[]p.PlayerStats {
-	for _, playerStats := range *playersStats {
+func filterPlayerStatsByName(name string, playersStats []games.PlayerStats) []games.PlayerStats {
+	for _, playerStats := range playersStats {
 		if playerStats.Name == name {
-			return &[]p.PlayerStats{playerStats}
+			return []games.PlayerStats{playerStats}
 		}
 	}
 
-	return &[]p.PlayerStats{}
+	return []games.PlayerStats{}
 }
 
 func getSortName(cmd *cobra.Command) (string, error) {
@@ -86,10 +77,10 @@ func getSortName(cmd *cobra.Command) (string, error) {
 	}
 
 	if sortName == "" {
-		return p.SortByPointsRatio, nil
+		return "pointsRatio", nil
 	}
 
-	if sortName != p.SortByPointsRatio && sortName != p.SortByWins && sortName != p.SortByGames && sortName != p.SortByWinRatio {
+	if sortName != "pointsRatio" && sortName != "wint" && sortName != "games" && sortName != "winRatio" {
 		return "", errors.New("Sort flag has to be pointsRatio, games, wins or winRatio")
 	}
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/spie/fskick/internal/db"
-	"github.com/spie/fskick/internal/seasons"
 	"github.com/spie/fskick/internal/uuid"
 )
 
@@ -128,51 +127,6 @@ func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player,
 		}
 
 		players = append(players, player)
-	}
-
-	return players, nil
-}
-
-func (repository PlayerRepository) FindPlayersPlayedInSeason(season seasons.Season) ([]Player, error) {
-	players := []Player{}
-
-	err := repository.connectionHandler.Preload("Attendances.Game.Season").Find(&players)
-	if err != nil {
-		return []Player{}, err
-	}
-
-	return getPlayersForSeason(season, players), nil
-}
-
-func getPlayersForSeason(season seasons.Season, players []Player) []Player {
-	playersPlayed := []Player{}
-	for _, player := range players {
-		attendancesInSeason := getAttendancesForSeason(season, player.Attendances)
-		if len(*attendancesInSeason) > 0 {
-			player.Attendances = attendancesInSeason
-			playersPlayed = append(playersPlayed, player)
-		}
-	}
-
-	return playersPlayed
-}
-
-func getAttendancesForSeason(season seasons.Season, attendances *[]Attendance) *[]Attendance {
-	attendancesInSeason := []Attendance{}
-	for _, attendance := range *attendances {
-		if attendance.Game.Season.ID == season.ID {
-			attendancesInSeason = append(attendancesInSeason, attendance)
-		}
-	}
-
-	return &attendancesInSeason
-}
-
-func (repository PlayerRepository) AllPlayersWithAttendances() ([]Player, error) {
-	players := []Player{}
-	err := repository.connectionHandler.Preload("Attendances.Game").Find(&players)
-	if err != nil {
-		return []Player{}, err
 	}
 
 	return players, nil

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spie/fskick/internal/games"
-	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
 )
 
@@ -18,7 +17,6 @@ type seasonsCommand struct {
 
 func NewSeasonsCommand(
 	gamesManager games.Manager,
-	playersManager players.PlayerStatsCalculator,
 	seasonsManager seasons.Manager,
 ) SeasonsCommand {
 	seasonsCommand := seasonsCommand{cc: &cobra.Command{
@@ -33,7 +31,7 @@ func NewSeasonsCommand(
 	seasonsCommand.cc.AddCommand(getSeasonsCommand.cc)
 	activateSeasonComand := newActivateSeasonCommand(seasonsManager)
 	seasonsCommand.cc.AddCommand(activateSeasonComand.cc)
-	tableCommand := newGetTableCommand(gamesManager, playersManager, seasonsManager)
+	tableCommand := newGetTableCommand(gamesManager, seasonsManager)
 	seasonsCommand.cc.AddCommand(tableCommand.cc)
 
 	return &seasonsCommand
