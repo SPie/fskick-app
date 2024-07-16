@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS "seasons" (
     `uuid` text NOT NULL UNIQUE,
     PRIMARY KEY(id)
 );
-CREATE INDEX `idx_seasons_deleted_at` ON `seasons`(`deleted_at`);
+CREATE INDEX IF NOT EXISTS `idx_seasons_deleted_at` ON `seasons`(`deleted_at`);
 
 CREATE TABLE IF NOT EXISTS "players" (
     id INTEGER NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS "players" (
     `uuid` text NOT NULL UNIQUE,
     PRIMARY KEY(id)
 );
-CREATE INDEX `idx_players_deleted_at` ON `players`(`deleted_at`);
+CREATE INDEX IF NOT EXISTS `idx_players_deleted_at` ON `players`(`deleted_at`);
 
 CREATE TABLE IF NOT EXISTS "games" (
     id INTEGER NOT NULL,
@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS "attendances" (
     uuid text null default null,
     PRIMARY KEY(id)
 );
-CREATE INDEX IDX_9C6B8FD4E48FD905 ON "attendances" (game_id);
-CREATE INDEX IDX_9C6B8FD499E6F5DF ON "attendances" (player_id);
+CREATE INDEX IF NOT EXISTS IDX_9C6B8FD4E48FD905 ON "attendances" (game_id);
+CREATE INDEX IF NOT EXISTS IDX_9C6B8FD499E6F5DF ON "attendances" (player_id);
 -- +goose StatementEnd
 
 -- +goose Down

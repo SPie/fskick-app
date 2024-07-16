@@ -3,19 +3,12 @@ package api
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
-	gamesHandlers "github.com/spie/fskick/internal/api/handlers/games"
-	playersHandlers "github.com/spie/fskick/internal/api/handlers/players"
-	seasonsHandlers "github.com/spie/fskick/internal/api/handlers/seasons"
-	"github.com/spie/fskick/internal/games"
-	"github.com/spie/fskick/internal/players"
-	"github.com/spie/fskick/internal/seasons"
 )
 
 func SetUp(
-	playersManager players.Manager,
-	gamesManager games.Manager,
-	seasonsManager seasons.Manager,
+	gamesController GamesController,
+	seasonsController SeasonsController,
+	playersController PlayersController,
 ) *gin.Engine {
 	engine := gin.Default()
 
@@ -23,18 +16,15 @@ func SetUp(
 
 	api := engine.Group("/api")
 	{
-		api.GET("/seasons", seasonsHandlers.GetSeasons(seasonsManager))
-		api.GET("/seasons/table", gamesHandlers.GetTable(playersManager, gamesManager, seasonsManager))
-		api.GET(
-			"/seasons/table/:season",
-			gamesHandlers.GetTableForSeason(playersManager, gamesManager, seasonsManager),
-		)
+		api.GET("/seasons", seasonsController.GetSeasons)
+		api.GET("/seasons/table", gamesController.GetTable)
+		api.GET("/seasons/table/:season", gamesController.GetTableForSeason)
 
-		api.GET("/players", playersHandlers.GetPlayers(gamesManager))
-		api.GET("/players/:player/team", playersHandlers.GetFavoriteTeam(playersManager, gamesManager))
-		api.GET("/players/:player", playersHandlers.GetPlayers(gamesManager))
+		api.GET("/players", playersController.GetPlayers)
+		api.GET("/players/:player/team", playersController.GetFavoriteTeam)
+		api.GET("/players/:player", playersController.GetPlayers)
 
-		api.GET("/games/count", gamesHandlers.GetGamesCount(gamesManager))
+		api.GET("/games/count", gamesController.GetGamesCount)
 	}
 
 	return engine
