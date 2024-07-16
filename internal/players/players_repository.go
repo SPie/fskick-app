@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/spie/fskick/internal/db"
-	"github.com/spie/fskick/internal/uuid"
 )
 
 var (
@@ -14,27 +13,21 @@ var (
 )
 
 type PlayerRepository struct {
-	connectionHandler *db.ConnectionHandler
 	dbHandler db.Handler
 }
 
-func NewPlayerRepository(
-	connectionHandler *db.ConnectionHandler,
-	dbHandler db.Handler,
-) PlayerRepository {
+func NewPlayerRepository(dbHandler db.Handler) PlayerRepository {
 	return PlayerRepository{
-		connectionHandler: connectionHandler,
 		dbHandler: dbHandler,
 	}
 }
 
 func (repository PlayerRepository) CreatePlayer(player *Player) error {
-	uuid, err := uuid.GenerateUuidString()
+	err := player.CreateUUID()
 	if err != nil {
 		return fmt.Errorf("create uuid for insert player: %w", err)
 	}
 
-	player.UUID = uuid
 	player.CreatedAt = time.Now()
 	player.UpdatedAt = time.Now()
 

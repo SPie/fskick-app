@@ -7,7 +7,6 @@ import (
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
-	"github.com/spie/fskick/internal/uuid"
 )
 
 type Game struct {
@@ -27,14 +26,13 @@ func NewGamesRepository(dbHandler db.Handler) GamesRepository {
 }
 
 func (repository GamesRepository) CreateGame(game *Game, attendances []Attendance) error {
-	u, err := uuid.GenerateUuidString()
+	err := game.CreateUUID()
 	if err != nil {
 		return fmt.Errorf("create uuid for insert game: %w", err)
 	}
 
 	now := time.Now()
 
-	game.UUID = u
 	game.CreatedAt = now
 	game.UpdatedAt = now
 
@@ -66,12 +64,11 @@ func (repository GamesRepository) CreateGame(game *Game, attendances []Attendanc
 
 	createdAttendancees := make([]Attendance, len(attendances))
 	for i, attendance := range attendances {
-		u, err = uuid.GenerateUuidString()
+		err = attendance.CreateUUID()
 		if err != nil {
 			return fmt.Errorf("create uuid for insert attendance: %w", err)
 		}
 
-		attendance.UUID = u
 		attendance.CreatedAt = now
 		attendance.UpdatedAt = now
 		attendance.GameID = game.ID

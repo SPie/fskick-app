@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/spie/fskick/internal/db"
-	"github.com/spie/fskick/internal/uuid"
 )
 
 var (
@@ -27,12 +26,11 @@ func NewSeasonsRepository(dbHandler db.Handler) SeasonsRepository {
 }
 
 func (repository SeasonsRepository) CreateSeason(season *Season) error {
-	uuid, err := uuid.GenerateUuidString()
+	err := season.CreateUUID()
 	if err != nil {
 		return fmt.Errorf("create uuid for insert season: %w", err)
 	}
 
-	season.UUID = uuid
 	season.CreatedAt = time.Now()
 	season.UpdatedAt = time.Now()
 

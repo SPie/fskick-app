@@ -3,25 +3,24 @@ package db
 import (
 	"time"
 
-	"github.com/google/uuid"
-	"gorm.io/gorm"
+	"github.com/spie/fskick/internal/uuid"
 )
 
 type Model struct {
-	ID        uint           `gorm:"primarykey" json:"-"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-	UUID      string         `gorm:"unique;not null" json:"uuid"`
+	ID        uint      `json:"-"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	DeletedAt time.Time `json:"-"`
+	UUID      string    `json:"uuid"`
 }
 
-func (model *Model) BeforeCreate(db *gorm.DB) error {
-	p, err := uuid.NewUUID()
+func (model *Model) CreateUUID() error {
+	uuid, err := uuid.GenerateUuidString()
 	if err != nil {
 		return err
 	}
 
-	model.UUID = p.String()
+	model.UUID = uuid
 
 	return nil
 }

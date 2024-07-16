@@ -10,31 +10,10 @@ import (
 
 type Player struct {
 	db.Model
-	Name string `gorm:"unique;not null" json:"name"`
-}
-
-type PlayerAttendance struct {
-	Player
-	Wins  int `json:"wins"`
-	Games int `json:"games"`
-}
-
-type PlayerStats struct {
-	PlayerAttendance
-	Position    int     `json:"position"`
-	PointsRatio float32 `json:"pointsRatio"`
-	Points      int     `json:"points"`
+	Name string `json:"name"`
 }
 
 type Team []Player
-
-type PlayerCreator interface {
-	CreatePlayer(name string) (Player, error)
-}
-
-type AttendanceCreator interface {
-	GetTeamsByNames(winnerNames []string, loserNames []string) (Team, Team, error)
-}
 
 type Manager struct {
 	playerRepository      PlayerRepository

@@ -6,15 +6,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spie/fskick/internal/cli"
-	p "github.com/spie/fskick/internal/players"
+	"github.com/spie/fskick/internal/players"
 )
 
 type createPlayerCommand struct {
 	cc             *cobra.Command
-	playersManager p.PlayerCreator
+	playersManager players.Manager
 }
 
-func newCreatePlayerCommand(playersManager p.PlayerCreator) *createPlayerCommand {
+func newCreatePlayerCommand(playersManager players.Manager) *createPlayerCommand {
 	createPlayerCommand := &createPlayerCommand{playersManager: playersManager}
 
 	cc := &cobra.Command{

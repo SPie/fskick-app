@@ -3,7 +3,7 @@ package games
 import (
 	"github.com/spf13/cobra"
 
-	g "github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
 )
 
@@ -15,7 +15,7 @@ type gamesCommand struct {
 	cc *cobra.Command
 }
 
-func NewGamesCommand(gamesManager g.Manager, playersManager players.AttendanceCreator) GamesCommand {
+func NewGamesCommand(gamesManager games.Manager, playersManager players.Manager) GamesCommand {
 	gamesCommand := gamesCommand{cc: &cobra.Command{
 		Use:   "games",
 		Short: "Commands to handle games",

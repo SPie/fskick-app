@@ -29,12 +29,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	connectionHandler, err := db.NewConnectionHandler(cfg.DbConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer connectionHandler.Close()
-
 	seasonsRepository := seasons.NewSeasonsRepository(dbHandler)
 	seasonManager := seasons.NewManager(seasonsRepository)
 
@@ -42,7 +36,7 @@ func main() {
 	attendanceRepository := games.NewAttendanceRepository(dbHandler)
 	gamesManager := games.NewManager(gamesRepository, attendanceRepository, seasonManager)
 
-	playersRepository := players.NewPlayerRepository(connectionHandler, dbHandler)
+	playersRepository := players.NewPlayerRepository(dbHandler)
 	playersManager := players.NewManager(playersRepository)
 
 	err = api.SetUp(playersManager, gamesManager, seasonManager).Run(cfg.ApiHost)
