@@ -58,6 +58,7 @@ type playerStatsResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 	Wins int `json:"wins"`
 	Games int `json:"games"`
+	GamesRatio float64 `json:"gamesRatio"`
 	PointsRatio float64 `json:"pointsRatio"`
 	Points int `json:"points"`
 	WinRatio float64 `json:"winRatio"`
@@ -72,6 +73,7 @@ func newPlayerStatsResponseFromPlayerStats(playerStats games.PlayerStats) player
 		UpdatedAt: playerStats.UpdatedAt,
 		Wins: playerStats.Wins,
 		Games: playerStats.Games,
+		GamesRatio: playerStats.GamesRatio,
 		PointsRatio: playerStats.PointsRatio,
 		Points: playerStats.Points,
 		WinRatio: playerStats.WinRatio,

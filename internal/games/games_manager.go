@@ -159,12 +159,14 @@ func createPlayerStats(playerAttendances []PlayerAttendance, gamesCount int, max
 	playerStats := make([]PlayerStats, len(playerAttendances))
 	for i, playerAttendance := range playerAttendances {
 		stats := PlayerStats{PlayerAttendance: playerAttendance}
-		stats.WinRatio = float64(stats.Wins / stats.Games)
-		stats.GamesRatio = float64(stats.Games / gamesCount)
+		stats.WinRatio = float64(stats.Wins) / float64(stats.Games)
+		stats.GamesRatio = float64(stats.Games) / float64(gamesCount)
 		stats.Points = stats.Wins * 3
 		stats.PointsRatio = float64(stats.Points) /
 			math.Max(float64(stats.Games), float64(maxGamesCount / 2))
 		playerStats[i] = stats
+
+		fmt.Printf("Wins: %d, Games: %d, WinRatio: %f \n", stats.Wins, stats.Games, stats.WinRatio)
 	}
 
 	return playerStats
@@ -237,7 +239,7 @@ func getSortAndPositionFunc(
 			return (playerStats)[p].PointsRatio > (playerStats)[q].PointsRatio
 		},
 		func(p PlayerStats) float64 {
-			return float64(p.PointsRatio)
+			return p.PointsRatio
 		}
 	}
 }
