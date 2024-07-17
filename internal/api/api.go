@@ -1,35 +1,40 @@
 package api
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"net/http"
 )
+
+type Server interface {
+	Run(addr ...string) error
+}
+
+type MuxServer struct {
+	mux *http.ServeMux
+}
 
 func SetUp(
 	gamesController GamesController,
 	seasonsController SeasonsController,
 	playersController PlayersController,
-) *gin.Engine {
-	engine := gin.Default()
+) Server {
+	server := MuxServer{mux: http.NewServeMux()}
 
-	engine.Use(setUpCors())
+	server.mux.HandleFunc("/api/seasons", seasonsController.GetSeasons)
+	server.mux.HandleFunc("/api/seasons/table", gamesController.GetTable)
+	server.mux.HandleFunc("/api/seasons/table/{season}", gamesController.GetTable)
 
-	api := engine.Group("/api")
-	{
-		api.GET("/seasons", seasonsController.GetSeasons)
-		api.GET("/seasons/table", gamesController.GetTable)
-		api.GET("/seasons/table/:season", gamesController.GetTableForSeason)
+	server.mux.HandleFunc("/api/players", playersController.GetPlayers)
+	server.mux.HandleFunc("/api/players/:player/team", playersController.GetFavoriteTeam)
+	server.mux.HandleFunc("/api/players/{player}", playersController.GetPlayers)
 
-		api.GET("/players", playersController.GetPlayers)
-		api.GET("/players/:player/team", playersController.GetFavoriteTeam)
-		api.GET("/players/:player", playersController.GetPlayers)
+	server.mux.HandleFunc("/api/games/count", gamesController.GetGamesCount)
 
-		api.GET("/games/count", gamesController.GetGamesCount)
-	}
-
-	return engine
+	return &server
 }
 
-func setUpCors() gin.HandlerFunc {
-	return cors.Default()
+func (server *MuxServer) Run(addr ...string) error {
+	fmt.Printf("Starting the server on %s...\n", addr[0])
+
+	return http.ListenAndServe(addr[0], server.mux)
 }

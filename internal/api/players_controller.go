@@ -1,7 +1,10 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
+	"errors"
+	"fmt"
+	"net/http"
+
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
 )
@@ -21,31 +24,31 @@ func NewPlayersController(
 	}
 }
 
-type GetPlayersRequest struct {
-	Player string `uri:"player"`
-}
+func (controller PlayersController) GetPlayers(res http.ResponseWriter, req *http.Request) {
+	sort := req.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "pointsRation"
+	}
 
-func (controller PlayersController) GetPlayers(c *gin.Context) {
-	playerStats, err := controller.gamesManager.GetAllPlayerStats(c.DefaultQuery("sort", "pointsRatio"))
+	playerStats, err := controller.gamesManager.GetAllPlayerStats(sort)
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	var request GetPlayersRequest
-	err = c.ShouldBindUri(&request)
+	playerName := req.PathValue("player")
+	if playerName != "" {
+		playerStats = filterPlayersStatsForName(playerStats, playerName)
+	}
+
+	err = writeJsonResponse(
+		res,
+		map[string][]playerStatsResponse{"playerStats": newPlayerStatsResponsesFromPlayerStats(playerStats)},
+	)
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
-
-	if request.Player == "" {
-		c.JSON(200, gin.H{"playerStats": playerStats})
-		return
-	}
-
-	c.JSON(200, gin.H{"playerStats": filterPlayersStatsForName(playerStats, request.Player)})
-	return
 }
 
 func filterPlayersStatsForName(playersStats []games.PlayerStats, uuid string) []games.PlayerStats {
@@ -58,33 +61,36 @@ func filterPlayersStatsForName(playersStats []games.PlayerStats, uuid string) []
 	return []games.PlayerStats{}
 }
 
-type GetFavoriteTeamRequest struct {
-	Player string `uri:"player" binding:"required"`
-}
+func (controller PlayersController) GetFavoriteTeam(res http.ResponseWriter, req *http.Request) {
+	playerUuid := req.PathValue("player")
 
-func (controller PlayersController) GetFavoriteTeam(c *gin.Context) {
-	var request GetPlayersRequest
-	err := c.ShouldBindUri(&request)
+	player, err := controller.playersManager.GetPlayerByUUID(playerUuid)
+	if errors.Is(err, players.ErrPlayerNotFound) {
+		http.Error(res, fmt.Sprintf("Player %s not found", playerUuid), http.StatusUnprocessableEntity)
+		return
+	}
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	player, err := controller.playersManager.GetPlayerByUUID(request.Player)
+	sort := req.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "pointsRatio"
+	}
+
+	teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(player, sort)
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(
-		player,
-		c.DefaultQuery("sort", "getPointsRatio"),
+	err = writeJsonResponse(
+		res,
+		map[string][]playerStatsResponse{"playerStats": newPlayerStatsResponsesFromPlayerStats(teamPlayerStats)},
 	)
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
-
-	c.JSON(200, gin.H{"playerStats": teamPlayerStats})
-	return
 }

@@ -1,9 +1,8 @@
 package api
 
 import (
-	"time"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
@@ -27,90 +26,59 @@ func NewGamesController(
 	}
 }
 
-func (controller GamesController) GetGamesCount(c *gin.Context) {
+func (controller GamesController) GetGamesCount(res http.ResponseWriter, _ *http.Request) {
 	gamesCount, err := controller.gamesManager.GetGamesCount()
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"gamesCount": gamesCount})
-}
-
-type seasonResponse struct {
-	UUID string `json:"uuid"`
-	Name string `json:"name"`
-	Active bool `json:"active"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	GamesCount int `json:"gamesCount"`
-}
-
-func (controller GamesController) GetTable(c *gin.Context) {
-	playerStats, season, err := controller.getTable("", c.DefaultQuery("sort", "pointsRatio"))
+	err = writeJsonResponse(res, map[string]int{"gamesCount": gamesCount})
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
-
-	c.JSON(200, gin.H{
-		"season":      season,
-		"playerStats": playerStats,
-	})
 }
 
-type getTableForSeasonRequest struct {
-	Season string `uri:"season" binding:"required"`
-}
-
-func (controller GamesController) GetTableForSeason(c *gin.Context) {
-	var request getTableForSeasonRequest
-	if err := c.ShouldBindUri(&request); err != nil {
-		c.Error(err)
-		return
+func (controller GamesController) GetTable(res http.ResponseWriter, req *http.Request) {
+	sort := req.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "pointsRatio"
 	}
 
-	playerStats, season, err := controller.getTable(request.Season, c.DefaultQuery("sort", "pointsRatio"))
+	tableRes, err := controller.getTable("", sort)
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"season":      season,
-		"playerStats": playerStats,
-	})
+	err = writeJsonResponse(res, tableRes)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
 }
-
-type getTableForPlayerRequest struct {
-	Season string `uri:"season" binding:"required"`
-	Player string `uri:"player" binding:"required"`
-}
-
 
 func (controller GamesController) getTable(
 	seasonUuid string,
 	sort string,
-) ([]games.PlayerStats, seasonResponse, error) {
+) (tableResponse, error) {
 	season, err := controller.getSeason(seasonUuid)
 	if err != nil {
-		return nil, seasonResponse{}, err
+		return tableResponse{}, err
 	}
 
 	playerStats, err := controller.gamesManager.GetPlayerStatsForSeason(season, sort)
 	if err != nil {
-		return nil, seasonResponse{}, err
+		return tableResponse{}, err
 	}
-
-	seasonRes := getSeasonResponse(season)
 
 	gamesCount, err := controller.gamesManager.GetGamesCountForSeason(season)
 	if err != nil {
-		return nil, seasonResponse{}, err
+		return tableResponse{}, err
 	}
-	seasonRes.GamesCount = gamesCount
 
-	return playerStats, seasonRes, nil
+	return newTableResponse(season, gamesCount, playerStats), nil
 }
 
 func (controller GamesController) getSeason(seasonUuid string) (seasons.Season, error) {
@@ -119,14 +87,4 @@ func (controller GamesController) getSeason(seasonUuid string) (seasons.Season, 
 	}
 
 	return controller.seasonsManager.ActiveSeason()
-}
-
-func getSeasonResponse(season seasons.Season) seasonResponse {
-	return seasonResponse{
-		UUID: season.UUID,
-		Name: season.Name,
-		Active: season.Active,
-		CreatedAt: season.CreatedAt,
-		UpdatedAt: season.UpdatedAt,
-	}
 }

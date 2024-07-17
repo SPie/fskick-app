@@ -43,7 +43,9 @@ func main() {
 	seasonsController := api.NewSeasonsController(seasonManager)
 	playersController := api.NewPlayersController(playersManager, gamesManager)
 
-	err = api.SetUp(gamesController, seasonsController, playersController).Run(cfg.ApiHost)
+	err = api.
+		SetUp(gamesController, seasonsController, playersController).
+		Run(cfg.ApiHost)
 	if err != nil {
 		log.Fatal(err)
 	}

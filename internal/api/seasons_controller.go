@@ -1,7 +1,8 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
+	"net/http"
+
 	"github.com/spie/fskick/internal/seasons"
 )
 
@@ -13,12 +14,21 @@ func NewSeasonsController(seasonsManager seasons.Manager) SeasonsController {
 	return SeasonsController{seasonsManager: seasonsManager}
 }
 
-func (controller SeasonsController) GetSeasons(c *gin.Context) {
+func (controller SeasonsController) GetSeasons(res http.ResponseWriter, _ *http.Request) {
 	seasons, err := controller.seasonsManager.GetSeasons()
 	if err != nil {
-		c.Error(err)
+		handleInternalServerError(res, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"seasons": seasons})
+	seasonsResponse := make([]seasonResponse, len(seasons))
+	for i, season := range seasons {
+		seasonsResponse[i] = newSeasonResponseFromSeason(season)
+	}
+
+	err = writeJsonResponse(res, map[string][]seasonResponse{"seasons": seasonsResponse})
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
 }
