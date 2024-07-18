@@ -15,17 +15,12 @@ type playersCommand struct {
 	cc *cobra.Command
 }
 
-func NewPlayersCommand(playersManager players.Manager, gamesManager games.Manager) *playersCommand {
+func NewPlayersCommand() *playersCommand {
 	playersCommand := playersCommand{cc: &cobra.Command{
 		Use:   "players",
 		Short: "Commands to handle players",
 		Long:  "All commands handling players like creating new players, show a specific player, list all players...",
 	}}
-
-	createPlayerCommand := newCreatePlayerCommand(playersManager)
-	playersCommand.AddCommand(createPlayerCommand)
-	getPlayersCommand := newGetPlayersCommand(gamesManager)
-	playersCommand.AddCommand(getPlayersCommand)
 
 	return &playersCommand
 }
@@ -43,7 +38,7 @@ type createPlayerCommand struct {
 	playersManager players.Manager
 }
 
-func newCreatePlayerCommand(playersManager players.Manager) *createPlayerCommand {
+func NewCreatePlayerCommand(playersManager players.Manager) *createPlayerCommand {
 	createPlayerCommand := &createPlayerCommand{playersManager: playersManager}
 
 	cc := &cobra.Command{
@@ -83,7 +78,7 @@ type getPlayersCommand struct {
 	gamesManager   games.Manager
 }
 
-func newGetPlayersCommand(gamesManager games.Manager) *getPlayersCommand {
+func NewGetPlayersCommand(gamesManager games.Manager) *getPlayersCommand {
 	getPlayersCommand := getPlayersCommand{
 		gamesManager: gamesManager,
 	}
