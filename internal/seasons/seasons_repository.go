@@ -13,8 +13,8 @@ var (
 
 type Season struct {
 	db.Model
-	Name   string  `json:"name"`
-	Active bool    `json:"active"`
+	Name   string
+	Active bool
 }
 
 type SeasonsRepository struct {

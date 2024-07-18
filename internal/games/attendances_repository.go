@@ -10,9 +10,9 @@ import (
 
 type Attendance struct {
 	db.Model
-	Win      bool        `json:"win"`
-	PlayerID uint        `json:"-"`
-	GameID   uint        `json:"-"`
+	Win      bool
+	PlayerID uint
+	GameID   uint
 }
 
 type PlayerAttendance struct {

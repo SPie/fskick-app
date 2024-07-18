@@ -8,6 +8,12 @@ import (
 	"github.com/spie/fskick/internal/db"
 )
 
+type Player struct {
+	db.Model
+	Name string
+}
+
+
 var (
 	ErrPlayerNotFound = db.ErrNotFound
 )

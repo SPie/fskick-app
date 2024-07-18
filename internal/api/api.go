@@ -5,11 +5,7 @@ import (
 	"net/http"
 )
 
-type Server interface {
-	Run(addr ...string) error
-}
-
-type MuxServer struct {
+type Server struct {
 	mux *http.ServeMux
 }
 
@@ -17,8 +13,8 @@ func SetUp(
 	gamesController GamesController,
 	seasonsController SeasonsController,
 	playersController PlayersController,
-) Server {
-	server := MuxServer{mux: http.NewServeMux()}
+) *Server {
+	server := Server{mux: http.NewServeMux()}
 
 	server.mux.HandleFunc("/api/seasons", seasonsController.GetSeasons)
 	server.mux.HandleFunc("/api/seasons/table", gamesController.GetTable)
@@ -33,7 +29,7 @@ func SetUp(
 	return &server
 }
 
-func (server *MuxServer) Run(addr ...string) error {
+func (server *Server) Run(addr ...string) error {
 	fmt.Printf("Starting the server on %s...\n", addr[0])
 
 	return http.ListenAndServe(addr[0], server.mux)
