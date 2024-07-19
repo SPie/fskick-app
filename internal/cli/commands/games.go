@@ -12,28 +12,20 @@ import (
 )
 
 type gamesCommand struct {
-	cc *cobra.Command
+	command
 }
 
 func NewGamesCommand() *gamesCommand {
-	gamesCommand := gamesCommand{cc: &cobra.Command{
+	gamesCommand := gamesCommand{command: newCommand(&cobra.Command{
 		Use:   "games",
 		Short: "Commands to handle games",
-	}}
+	})}
 
 	return &gamesCommand
 }
 
-func (command *gamesCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *gamesCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type createGameCommand struct {
-	cc             *cobra.Command
+	command
 	gamesManager   games.Manager
 	playersManager players.Manager
 }
@@ -50,7 +42,7 @@ func NewCreateGameCommand(gamesManager games.Manager, playersManager players.Man
 	cc.Flags().StringP("losers", "l", "", "comma seperated names of losers")
 	cc.Flags().StringP("playedAt", "p", "", "Date and time of the game")
 
-	createGameCommand.cc = cc
+	createGameCommand.command = newCommand(cc)
 
 	return &createGameCommand
 }
@@ -108,12 +100,4 @@ func (command *createGameCommand) getPlayedAt() (time.Time, error) {
 	}
 
 	return playedAt, nil
-}
-
-func (command *createGameCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *createGameCommand) getCommand() *cobra.Command {
-	return command.cc
 }

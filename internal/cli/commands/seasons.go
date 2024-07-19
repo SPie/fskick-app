@@ -12,29 +12,21 @@ import (
 )
 
 type seasonsCommand struct {
-	cc *cobra.Command
+	command
 }
 
 func NewSeasonsCommand() *seasonsCommand {
-	seasonsCommand := seasonsCommand{cc: &cobra.Command{
+	seasonsCommand := seasonsCommand{command: newCommand(&cobra.Command{
 		Use:   "seasons",
 		Short: "Commands to handle seasons",
 		Long:  "All commands to handle seasons like creating new seasons, switch active seasons, show tables...",
-	}}
+	})}
 
 	return &seasonsCommand
 }
 
-func (command *seasonsCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *seasonsCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type createSeasonCommand struct {
-	cc *cobra.Command
+	command
 	seasonsManager seasons.Manager
 }
 
@@ -49,7 +41,7 @@ func NewCreateSeasonCommand(seasonsManager seasons.Manager) *createSeasonCommand
 		RunE:  createSeasonCommand.createSeason,
 	}
 
-	createSeasonCommand.cc = cc
+	createSeasonCommand.command = newCommand(cc)
 
 	return createSeasonCommand
 }
@@ -65,16 +57,8 @@ func (createScreateSeasonCommand *createSeasonCommand) createSeason(cmd *cobra.C
 	return nil
 }
 
-func (command *createSeasonCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *createSeasonCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type getSeasonsCommand struct {
-	cc           *cobra.Command
+	command
 	seasonsManager seasons.Manager
 }
 
@@ -88,7 +72,7 @@ func NewGetSeasonsCommand(seasonsManager seasons.Manager) *getSeasonsCommand {
 		RunE:  getSeasonsCommand.getSeasons,
 	}
 
-	getSeasonsCommand.cc = cc
+	getSeasonsCommand.command = newCommand(cc)
 
 	return getSeasonsCommand
 }
@@ -113,16 +97,8 @@ func (getSeasonsCommand *getSeasonsCommand) getSeasons(cmd *cobra.Command, args 
 	return nil
 }
 
-func (command *getSeasonsCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *getSeasonsCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type activateSeasonCommand struct {
-	cc *cobra.Command
+	command
 	seasonsManager seasons.Manager
 }
 
@@ -137,7 +113,7 @@ func NewActivateSeasonCommand(seasonsManager seasons.Manager) *activateSeasonCom
 		RunE:  activateSeasonCommand.activateSeason,
 	}
 
-	activateSeasonCommand.cc = cc
+	activateSeasonCommand.command = newCommand(cc)
 
 	return &activateSeasonCommand
 }
@@ -153,16 +129,8 @@ func (activateSeasonCommand *activateSeasonCommand) activateSeason(cmd *cobra.Co
 	return nil
 }
 
-func (command *activateSeasonCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *activateSeasonCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type getTableCommand struct {
-	cc             *cobra.Command
+	command
 	gamesManager   games.Manager
 	seasonsManager seasons.Manager
 }
@@ -185,7 +153,7 @@ func NewGetTableCommand(
 
 	cc.Flags().StringP("sort", "s", "", "Table sort by")
 
-	getTableCommand.cc = cc
+	getTableCommand.command = newCommand(cc)
 
 	return getTableCommand
 }
@@ -247,12 +215,4 @@ func (command *getTableCommand) getSortName() (string, error) {
 	}
 
 	return sortName, nil
-}
-
-func (command *getTableCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *getTableCommand) getCommand() *cobra.Command {
-	return command.cc
 }

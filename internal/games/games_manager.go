@@ -165,8 +165,6 @@ func createPlayerStats(playerAttendances []PlayerAttendance, gamesCount int, max
 		stats.PointsRatio = float64(stats.Points) /
 			math.Max(float64(stats.Games), float64(maxGamesCount / 2))
 		playerStats[i] = stats
-
-		fmt.Printf("Wins: %d, Games: %d, WinRatio: %f \n", stats.Wins, stats.Games, stats.WinRatio)
 	}
 
 	return playerStats

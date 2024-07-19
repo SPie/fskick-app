@@ -5,32 +5,41 @@ import (
 )
 
 type Command interface {
+	Execute() error
 	AddCommand(command Command)
 	getCommand() *cobra.Command
 }
 
-type rootCommand struct {
+type command struct {
 	cc *cobra.Command
 }
 
+func newCommand(cc *cobra.Command) command {
+	return command{cc: cc}
+}
+
+func (cmd *command) Execute() error {
+	return cmd.cc.Execute()
+}
+
+func (cmd *command) AddCommand(c Command) {
+	cmd.cc.AddCommand(c.getCommand())
+}
+
+func (cmd *command) getCommand() *cobra.Command {
+	return cmd.cc
+}
+
+type rootCommand struct {
+	command
+}
+
 func NewRootCommand() *rootCommand {
-	rootCommand := rootCommand{cc: &cobra.Command{
+	rootCommand := rootCommand{command: newCommand(&cobra.Command{
 		Use:   "fskick",
 		Short: "FSKick CLI app",
 		Long:  "CLI app for FSKick to create new players, seasons, games and show results and statistics",
-	}}
+	})}
 
 	return &rootCommand
-}
-
-func (command *rootCommand) Execute() error {
-	return command.cc.Execute()
-}
-
-func (command *rootCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *rootCommand) getCommand() *cobra.Command {
-	return command.cc
 }

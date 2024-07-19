@@ -4,14 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/spie/fskick/internal/db"
 )
-
-type Player struct {
-	db.Model
-	Name string `json:"name"`
-}
 
 type Team []Player
 

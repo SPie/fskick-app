@@ -12,29 +12,21 @@ import (
 )
 
 type playersCommand struct {
-	cc *cobra.Command
+	command
 }
 
 func NewPlayersCommand() *playersCommand {
-	playersCommand := playersCommand{cc: &cobra.Command{
+	playersCommand := playersCommand{command: newCommand(&cobra.Command{
 		Use:   "players",
 		Short: "Commands to handle players",
 		Long:  "All commands handling players like creating new players, show a specific player, list all players...",
-	}}
+	})}
 
 	return &playersCommand
 }
 
-func (command *playersCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *playersCommand) getCommand() *cobra.Command {
-	return command.cc
-}
-
 type createPlayerCommand struct {
-	cc             *cobra.Command
+	command
 	playersManager players.Manager
 }
 
@@ -49,17 +41,9 @@ func NewCreatePlayerCommand(playersManager players.Manager) *createPlayerCommand
 		RunE:  createPlayerCommand.createPlayer,
 	}
 
-	createPlayerCommand.cc = cc
+	createPlayerCommand.command = newCommand(cc)
 
 	return createPlayerCommand
-}
-
-func (command *createPlayerCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *createPlayerCommand) getCommand() *cobra.Command {
-	return command.cc
 }
 
 func (createPlayerCommand *createPlayerCommand) createPlayer(cmd *cobra.Command, args []string) error {
@@ -74,7 +58,7 @@ func (createPlayerCommand *createPlayerCommand) createPlayer(cmd *cobra.Command,
 }
 
 type getPlayersCommand struct {
-	cc             *cobra.Command
+	command
 	gamesManager   games.Manager
 }
 
@@ -91,17 +75,9 @@ func NewGetPlayersCommand(gamesManager games.Manager) *getPlayersCommand {
 
 	cc.Flags().StringP("sort", "s", "", "Table sort by")
 
-	getPlayersCommand.cc = cc
+	getPlayersCommand.command = newCommand(cc)
 
 	return &getPlayersCommand
-}
-
-func (command *getPlayersCommand) AddCommand(c Command) {
-	command.cc.AddCommand(c.getCommand())
-}
-
-func (command *getPlayersCommand) getCommand() *cobra.Command {
-	return command.cc
 }
 
 func (getPlayersCommand *getPlayersCommand) getPlayers(cmd *cobra.Command, args []string) error {

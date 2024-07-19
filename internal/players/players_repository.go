@@ -13,7 +13,6 @@ type Player struct {
 	Name string
 }
 
-
 var (
 	ErrPlayerNotFound = db.ErrNotFound
 )
@@ -39,7 +38,8 @@ func (repository PlayerRepository) CreatePlayer(player *Player) error {
 
 	row := repository.dbHandler.QueryRow(
 		`INSERT INTO players (uuid, name, created_at, updated_at, deleted_at)
-		VALUES ($1, $2, $3, $4, $5)`,
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`,
 		player.UUID,
 		player.Name,
 		player.CreatedAt,
@@ -104,8 +104,17 @@ func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player,
 	players := []Player{}
 
 	rows, err := repository.dbHandler.Query(
-		`SELECT id, uuid, name, created_at, updated_at FROM players WHERE name IN ($1)`,
-		strings.Join(names, ","),
+		fmt.Sprintf(
+			`SELECT id,
+			uuid,
+			name,
+			created_at,
+			updated_at
+			FROM players
+			WHERE name IN (%s)`,
+			getInPlaceholders(names),
+		),
+		nameStringsToParameters(names)...,
 	)
 	if err != nil {
 		return []Player{}, fmt.Errorf("Query players by names: %w", err)
@@ -129,4 +138,22 @@ func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player,
 	}
 
 	return players, nil
+}
+
+func getInPlaceholders(names []string) string {
+	placeholders := make([]string, len(names))
+	for i := range names {
+		placeholders[i] = fmt.Sprintf("$%d", i)
+	}
+
+	return strings.Join(placeholders, ",")
+}
+
+func nameStringsToParameters(names []string) []any {
+	parameters := make([]any, len(names))
+	for i, name := range names {
+		parameters[i] = name
+	}
+
+	return parameters
 }
