@@ -33,20 +33,17 @@ func (repository AttendanceRepository) CollectPlayerAttendancesForSeason(
 	season seasons.Season,
 ) ([]PlayerAttendance, error) {
 	rows, err := repository.dbHandler.Query(
-		`SELECT
-			p.id,
-			p.uuid,
-			p.name,
-			p.created_at,
-			p.updated_at,
-			COUNT(a.id) AS games_played,
-			SUM(CASE WHEN a.win THEN 1 ELSE 0 END) as wins
-		FROM players p
-		JOIN attendances a ON p.id = a.player_id
-		JOIN games g ON g.id = a.game_id
-		WHERE g.season_id = $1
-		GROUP BY p.id
-		`,
+		fmt.Sprintf(
+			`SELECT
+			%s
+			FROM players p
+			JOIN attendances a ON p.id = a.player_id
+			JOIN games g ON g.id = a.game_id
+			WHERE g.season_id = $1
+			GROUP BY p.id
+			`,
+			getPlayerAttendanceColumns(),
+		),
 		season.ID,
 	)
 	if err != nil {
@@ -54,23 +51,9 @@ func (repository AttendanceRepository) CollectPlayerAttendancesForSeason(
 	}
 	defer rows.Close()
 
-	var playerAttendances []PlayerAttendance
-	for rows.Next() {
-		var playerAttendance PlayerAttendance
-		err = rows.Scan(
-			&playerAttendance.ID,
-			&playerAttendance.UUID,
-			&playerAttendance.Name,
-			&playerAttendance.CreatedAt,
-			&playerAttendance.UpdatedAt,
-			&playerAttendance.Games,
-			&playerAttendance.Wins,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan row for collect player attendances for season: %w", err)
-		}
-
-		playerAttendances = append(playerAttendances, playerAttendance)
+	playerAttendances, err := scanPlayerAttendances(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scan row for collect player attendances for season: %w", err)
 	}
 
 	return playerAttendances, nil
@@ -78,42 +61,25 @@ func (repository AttendanceRepository) CollectPlayerAttendancesForSeason(
 
 func (repository AttendanceRepository) CollectAllPlayerAttendances() ([]PlayerAttendance, error) {
 	rows, err := repository.dbHandler.Query(
-		`SELECT
-			p.id,
-			p.uuid,
-			p.name,
-			p.created_at,
-			p.updated_at,
-			COUNT(a.id) AS games_played,
-			SUM(CASE WHEN a.win THEN 1 ELSE 0 END) as wins
-		FROM players p
-		JOIN attendances a ON p.id = a.player_id
-		JOIN games g ON g.id = a.game_id
-		GROUP BY p.id
-		`,
+		fmt.Sprintf(
+			`SELECT
+			%s
+			FROM players p
+			JOIN attendances a ON p.id = a.player_id
+			JOIN games g ON g.id = a.game_id
+			GROUP BY p.id
+			`,
+			getPlayerAttendanceColumns(),
+		),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("collect all player attendances: %w", err)
 	}
 	defer rows.Close()
 
-	var playerAttendances []PlayerAttendance
-	for rows.Next() {
-		var playerAttendance PlayerAttendance
-		err = rows.Scan(
-			&playerAttendance.ID,
-			&playerAttendance.UUID,
-			&playerAttendance.Name,
-			&playerAttendance.CreatedAt,
-			&playerAttendance.UpdatedAt,
-			&playerAttendance.Games,
-			&playerAttendance.Wins,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan row for collect all player attendances: %w", err)
-		}
-
-		playerAttendances = append(playerAttendances, playerAttendance)
+	playerAttendances, err := scanPlayerAttendances(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scan row for collect all player attendances: %w", err)
 	}
 
 	return playerAttendances, nil
@@ -123,27 +89,24 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 	player players.Player,
 ) ([]PlayerAttendance, error) {
 	rows, err := repository.dbHandler.Query(
-		`WITH player_games AS (
-			SELECT g.id AS game_id, a.win
-			FROM attendances a
+		fmt.Sprintf(
+			`WITH player_games AS (
+				SELECT g.id AS game_id, a.win
+				FROM attendances a
+				JOIN games g ON g.id = a.game_id
+				WHERE a.player_id = $1
+			)
+			SELECT
+			%s
+			FROM players p
+			JOIN attendances a ON p.id = a.player_id
 			JOIN games g ON g.id = a.game_id
-			WHERE a.player_id = $1
-		)
-		SELECT
-			p.id,
-			p.uuid,
-			p.name,
-			p.created_at,
-			p.updated_at,
-			COUNT(a.id) AS games_played,
-			SUM(CASE WHEN a.win THEN 1 ELSE 0 END) as wins
-		FROM players p
-		JOIN attendances a ON p.id = a.player_id
-		JOIN games g ON g.id = a.game_id
-		JOIN player_games pg ON g.id = pg.game_id AND a.win = pg.win
-		WHERE p.id != $1
-		GROUP BY p.id
-		`,
+			JOIN player_games pg ON g.id = pg.game_id AND a.win = pg.win
+			WHERE p.id != $1
+			GROUP BY p.id
+			`,
+			getPlayerAttendanceColumns(),
+		),
 		player.ID,
 	)
 	if err != nil {
@@ -151,10 +114,30 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 	}
 	defer rows.Close()
 
+	playerAttendances, err := scanPlayerAttendances(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scan row for collect fellow player attendances: %w", err)
+	}
+
+	return playerAttendances, nil
+}
+
+func getPlayerAttendanceColumns() string {
+	return `
+		p.id,
+		p.uuid,
+		p.name,
+		p.created_at,
+		p.updated_at,
+		COUNT(a.id) AS games_played,
+		SUM(CASE WHEN a.win THEN 1 ELSE 0 END) as wins`
+}
+
+func scanPlayerAttendances(rows db.Rows) ([]PlayerAttendance, error) {
 	var playerAttendances []PlayerAttendance
 	for rows.Next() {
 		var playerAttendance PlayerAttendance
-		err = rows.Scan(
+		err := rows.Scan(
 			&playerAttendance.ID,
 			&playerAttendance.UUID,
 			&playerAttendance.Name,
@@ -164,7 +147,7 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 			&playerAttendance.Wins,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("scan row for collect fellow player attendances: %w", err)
+			return nil, fmt.Errorf("scan player attendances rows: %w", err)
 		}
 
 		playerAttendances = append(playerAttendances, playerAttendance)

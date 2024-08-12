@@ -141,7 +141,7 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 		args...,
 	)
 
-	err := scanSeason(row, &season)
+	err := scanSeason(row, season)
 	if err != nil {
 		return Season{}, fmt.Errorf("scan row in query active season: %w", err)
 	}
@@ -149,7 +149,7 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 	return season, nil
 }
 
-func scanSeason(row db.Row, season *Season) error {
+func scanSeason(row db.Row, season Season) error {
 	return row.Scan(
 		&season.ID,
 		&season.UUID,
