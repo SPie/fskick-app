@@ -129,7 +129,6 @@ func getSeasonsColumns() string {
 }
 
 func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any) (Season, error) {
-	var season Season
 	row := repository.dbHandler.QueryRow(
 		fmt.Sprintf(
 			`SELECT %s
@@ -141,7 +140,7 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 		args...,
 	)
 
-	err := scanSeason(row, season)
+	season, err := scanSeason(row)
 	if err != nil {
 		return Season{}, fmt.Errorf("scan row in query active season: %w", err)
 	}
@@ -149,8 +148,9 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 	return season, nil
 }
 
-func scanSeason(row db.Row, season Season) error {
-	return row.Scan(
+func scanSeason(row db.Row) (Season, error) {
+	var season Season
+	err := row.Scan(
 		&season.ID,
 		&season.UUID,
 		&season.CreatedAt,
@@ -158,6 +158,11 @@ func scanSeason(row db.Row, season Season) error {
 		&season.Name,
 		&season.Active,
 	)
+	if err != nil {
+		return Season{}, err
+	}
+
+	return season, nil
 }
 
 func scanSeasons(rows db.Rows) ([]Season, error) {

@@ -55,21 +55,17 @@ func (repository PlayerRepository) CreatePlayer(player *Player) error {
 }
 
 func (repository PlayerRepository) FindPlayerByUUID(uuid string) (Player, error) {
-	player := Player{}
 	row := repository.dbHandler.QueryRow(
-		`SELECT id, uuid, created_at, updated_at, name
-		FROM players
-		WHERE uuid = $1`,
+		fmt.Sprintf(
+			`SELECT %s
+			FROM players
+			WHERE uuid = $1`,
+			getPlayerColumns(),
+		),
 		uuid,
 	)
 
-	err := row.Scan(
-		&player.ID,
-		&player.UUID,
-		&player.CreatedAt,
-		&player.UpdatedAt,
-		&player.Name,
-	)
+	player, err := scanPlayer(row)
 	if err != nil {
 		return Player{}, fmt.Errorf("query player by uuid: %w", err)
 	}
@@ -78,21 +74,17 @@ func (repository PlayerRepository) FindPlayerByUUID(uuid string) (Player, error)
 }
 
 func (repository PlayerRepository) FindPlayerByName(name string) (Player, error) {
-	player := Player{}
 	row := repository.dbHandler.QueryRow(
-		`SELECT id, uuid, created_at, updated_at, name
-		FROM players
-		WHERE name = $1`,
+		fmt.Sprintf(
+			`SELECT %s
+			FROM players
+			WHERE name = $1`,
+			getPlayerColumns(),
+		),
 		name,
 	)
 
-	err := row.Scan(
-		&player.ID,
-		&player.UUID,
-		&player.CreatedAt,
-		&player.UpdatedAt,
-		&player.Name,
-	)
+	player, err := scanPlayer(row)
 	if err != nil {
 		return Player{}, fmt.Errorf("query player by name: %w", err)
 	}
@@ -101,17 +93,13 @@ func (repository PlayerRepository) FindPlayerByName(name string) (Player, error)
 }
 
 func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player, error) {
-	players := []Player{}
-
 	rows, err := repository.dbHandler.Query(
 		fmt.Sprintf(
-			`SELECT id,
-			uuid,
-			name,
-			created_at,
-			updated_at
+			`SELECT
+			%s
 			FROM players
 			WHERE name IN (%s)`,
+			getPlayerColumns(),
 			getInPlaceholders(names),
 		),
 		nameStringsToParameters(names)...,
@@ -121,6 +109,42 @@ func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player,
 	}
 	defer rows.Close()
 
+	players, err := scanPlayers(rows)
+	if err != nil {
+		return []Player{}, fmt.Errorf("Scan player rows: %w", err)
+	}
+
+	return players, nil
+}
+
+func getPlayerColumns() string {
+	return `
+		id,
+		uuid,
+		name,
+		created_at,
+		updated_at
+	`
+}
+
+func scanPlayer(row db.Row) (Player, error) {
+	var player Player
+	err := row.Scan(
+		&player.ID,
+		&player.UUID,
+		&player.Name,
+		&player.CreatedAt,
+		&player.UpdatedAt,
+	)
+	if err != nil {
+		return Player{}, err
+	}
+
+	return player, nil
+}
+
+func scanPlayers(rows db.Rows) ([]Player, error) {
+	players := []Player{}
 	for rows.Next() {
 		var player Player
 		err := rows.Scan(
@@ -131,7 +155,7 @@ func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player,
 			&player.UpdatedAt,
 		)
 		if err != nil {
-			return []Player{}, fmt.Errorf("Scan player rows: %w", err)
+			return []Player{}, err
 		}
 
 		players = append(players, player)
