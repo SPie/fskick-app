@@ -10,6 +10,8 @@ import (
 type AppConfig struct {
     ApiHost string
     DbConfig db.DbConfig
+    ServerHost string
+    ImprintText string
 }
 
 func LoadCliConfig() (AppConfig, error) {
@@ -23,7 +25,7 @@ func LoadCliConfig() (AppConfig, error) {
     return cfg, nil
 }
 
-func LoadApiConfig() (AppConfig, error) {
+func LoadServerConfig() (AppConfig, error) {
     cfg, err := loadEnvConfig()
     if err != nil {
         return AppConfig{}, err
@@ -31,6 +33,8 @@ func LoadApiConfig() (AppConfig, error) {
 
     setDbConfig(&cfg)
     setApiConfig(&cfg)
+
+    cfg.ImprintText = os.Getenv("IMPRINT_TEXT")
 
     return cfg, nil
 }
@@ -55,4 +59,8 @@ func setDbConfig(cfg *AppConfig) {
 
 func setApiConfig(cfg *AppConfig) {
     cfg.ApiHost = os.Getenv("API_HOST")
+}
+
+func setServerConfig(cfg *AppConfig) {
+    cfg.ServerHost = os.Getenv("HTTP_HOST")
 }

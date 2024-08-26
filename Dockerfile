@@ -4,23 +4,21 @@ WORKDIR /fskick-api
 
 COPY . .
 
-WORKDIR /fskick-api/cmd/api
+WORKDIR /fskick-api/cmd/server
 
 RUN set -x && go get -d -v . && \
-    CGOENABLED=0 GOOS=linux go build -a -o api .
+    CGOENABLED=0 GOOS=linux go build -a -o server .
 
 WORKDIR /fskick-api/cmd/cli
 
 RUN set -x && go get -d -v . && \
     CGOENABLED=0 GOOS=linux go build -o fskick .
 
-WORKDIR /fskick-api/cmd/migrations
-
 FROM ubuntu:latest
 
 WORKDIR /app
 
-COPY --from=builder /fskick-api/cmd/api/api .
+COPY --from=builder /fskick-api/cmd/server/server .
 COPY --from=builder /fskick-api/cmd/cli/fskick .
 
-CMD ["./api"]
+CMD ["./server"]

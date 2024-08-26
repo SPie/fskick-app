@@ -1,0 +1,21 @@
+package templates
+
+templ root() {
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="theme-color" content="#000000" />
+            <meta
+              name="description"
+              content="FSKick Statistics"
+            />
+            <link href="/static/css/tailwind.css" rel="stylesheet"/>
+            <title>FSKick</title>
+        </head>
+        <body class="bg-black">
+            <div style="display: contents"> { children... }</div>
+        </body>
+    </html>
+}
