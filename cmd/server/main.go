@@ -42,9 +42,16 @@ func main() {
 	playersRepository := players.NewPlayerRepository(dbHandler)
 	playersManager := players.NewManager(playersRepository)
 
-	gamesController := server.NewGamesController(gamesManager, seasonManager, playersManager)
+	gamesViews := server.NewGamesViews()
+	gamesViews.SeasonsTable = views.NewSeasonTable()
+	gamesController := server.NewGamesController(gamesManager, seasonManager, playersManager, gamesViews)
+
 	seasonsController := server.NewSeasonsController(seasonManager)
-	playersController := server.NewPlayersController(playersManager, gamesManager)
+
+	playersViews := server.NewPlayersViews()
+	playersViews.PlayersTable = views.NewPlayersTable()
+	playersViews.PlayerInfo = views.NewPlayerInfo()
+	playersController := server.NewPlayersController(playersManager, gamesManager, playersViews)
 
 	imprintView := views.NewImprintView()
 	imprintController := server.NewImprintController(cfg.ImprintText, imprintView)
@@ -52,13 +59,15 @@ func main() {
 	s := server.New(cfg.ApiHost)
 
 	s.Get("/", gamesController.TablePage)
+	s.Get("/players", playersController.GetPlayersTable)
+	s.Get("/players/{player}", playersController.GetPlayerInfo)
 
 	s.Get("/api/seasons", seasonsController.GetSeasons)
 	s.Get("/api/seasons/table", gamesController.GetTable)
 	s.Get("/api/seasons/table/{season}", gamesController.GetTable)
 
 	s.Get("/api/players", playersController.GetPlayers)
-	s.Get("/api/players/:player/team", playersController.GetFavoriteTeam)
+	s.Get("/api/players/{player}/team", playersController.GetFavoriteTeam)
 	s.Get("/api/players/{player}", playersController.GetPlayers)
 
 	s.Get("/api/games/count", gamesController.GetGamesCount)

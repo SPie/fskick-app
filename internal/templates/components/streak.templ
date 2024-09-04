@@ -1,0 +1,27 @@
+package components
+
+import (
+    "github.com/spie/fskick/internal/games"
+)
+
+templ Streak(attendances []games.Attendance) {
+    <div class="my-5">
+        <h3 class="text-left text-sm md:text-xl font-bold">Streak</h3>
+
+        <div class="my-5 flex space-x-4">
+            <div class="my-5 flex space-x-4 mx-auto">
+                for _, attendance := range attendances[len(attendances) - 5:] {
+                    <span class={templ.Class("border-1 inline-block rounded-full w-8 h-8 " + getStreakColor(attendance))} />
+                }
+            </div>
+        </div>
+    </div>
+}
+
+func getStreakColor(attendance games.Attendance) string {
+    if attendance.Win {
+        return "border-green bg-green"
+    }
+
+    return "border-red bg-red"
+}

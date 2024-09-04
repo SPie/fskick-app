@@ -1,0 +1,59 @@
+package components
+
+import (
+    "fmt"
+    "strconv"
+
+    "github.com/spie/fskick/internal/games"
+)
+
+templ PlayerStatsTable(playerStats []games.PlayerStats, gamesCount int) {
+    <table class="mx-auto text-xs md:text-base table-fixed">
+        <thead>
+            <tr>
+                @PlayerStatsHead(false) {
+                    Pos ({strconv.Itoa(len(playerStats))})
+                }
+                @PlayerStatsHead(false) {
+                    Player
+                }
+                @PlayerStatsHead(true) {
+                    Points
+                }
+                @PlayerStatsHead(false) {
+                    Wins
+                }
+                @PlayerStatsHead(false) {
+                    Games ({strconv.Itoa(gamesCount)})
+                }
+                @PlayerStatsHead(false) {
+                    Win Ratio
+                }
+            </tr>
+        </thead>
+        <tbody>
+            for _, player := range playerStats {
+                <tr>
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Position)}
+                    }
+                    @PlayerStatsColumn(true) {
+                        <a href={templ.URL(fmt.Sprintf("/players/%s", player.UUID))}>{player.Name}</a>
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.FormatFloat(player.PointsRatio, 'f', 2, 64)}
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Wins)}
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Games)} ({strconv.FormatFloat(player.GamesRatio * 100, 'f', 2, 64)} %)
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.FormatFloat(player.WinRatio * 100, 'f', 2, 64)} %
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}

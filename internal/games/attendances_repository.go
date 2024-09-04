@@ -122,6 +122,39 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 	return playerAttendances, nil
 }
 
+func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Player) ([]Attendance, error) {
+	rows, err := repository.dbHandler.Query(
+		`SELECT a.id, a.uuid, a.win, a.created_at
+		FROM attendances a
+		JOIN games g ON a.game_id = g.id
+		WHERE a.player_id = $1
+		ORDER BY g.played_at ASC`,
+		player.ID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get last x attendances for player: %w", err)
+	}
+	defer rows.Close()
+
+	attendances := []Attendance{}
+	for rows.Next() {
+		var attendance Attendance
+		err = rows.Scan(
+			&attendance.ID,
+			&attendance.UUID,
+			&attendance.Win,
+			&attendance.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan attendance rows: %w", err)
+		}
+
+		attendances = append(attendances, attendance)
+	}
+
+	return attendances, nil
+}
+
 func getPlayerAttendanceColumns() string {
 	return `
 		p.id,

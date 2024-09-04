@@ -134,7 +134,7 @@ func (repository GamesRepository) CountForPlayer(player players.Player) (int, er
 		QueryRow(
 			`SELECT COUNT(*)
 			FROM games g
-			JOIN attendances a
+			JOIN attendances a ON a.game_id = g.id
 			WHERE a.player_id = $1`,
 			player.ID,
 		).

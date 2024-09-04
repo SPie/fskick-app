@@ -1,0 +1,13 @@
+package components
+
+import (
+    "github.com/spie/fskick/internal/games"
+)
+
+templ FavoriteTeam(playerStats []games.PlayerStats, gamesCount int) {
+    <div class="my-5">
+        <h3 class="text-left text-sm md:text-xl font-bold">Favorite Team</h3>
+
+        @PlayerStatsTable(playerStats[:5], gamesCount)
+    </div>
+}

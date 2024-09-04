@@ -155,6 +155,10 @@ func (manager Manager) GetFellowPlayerStats(player players.Player, sort string) 
 	return playerStats, nil
 }
 
+func (manager Manager) GetAttendancesForPlayer(player players.Player) ([]Attendance, error) {
+	return manager.attendanceRepository.GetAttendancesForPlayer(player)
+}
+
 func createPlayerStats(playerAttendances []PlayerAttendance, gamesCount int, maxGamesCount int) []PlayerStats {
 	playerStats := make([]PlayerStats, len(playerAttendances))
 	for i, playerAttendance := range playerAttendances {
