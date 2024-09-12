@@ -9,7 +9,7 @@ import (
 type Team []Player
 
 type Manager struct {
-	playerRepository      PlayerRepository
+	playerRepository PlayerRepository
 }
 
 func NewManager(playerRepository PlayerRepository) Manager {

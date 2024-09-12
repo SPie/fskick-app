@@ -8,19 +8,19 @@ import (
 	"github.com/spie/fskick/internal/templates"
 )
 
-type PlayerInfo struct {}
+type PlayerInfo struct{}
 
 func NewPlayerInfo() PlayerInfo {
-    return PlayerInfo{}
+	return PlayerInfo{}
 }
 
 func (view PlayerInfo) Render(
-    playerStats games.PlayerStats,
-    gamesCount int,
-    lastAttendances []games.Attendance,
-    favoriteTeam []games.PlayerStats,
-    ctx context.Context,
-    w io.Writer,
+	playerStats games.PlayerStats,
+	gamesCount int,
+	lastAttendances []games.Attendance,
+	favoriteTeam []games.PlayerStats,
+	ctx context.Context,
+	w io.Writer,
 ) error {
-    return templates.Player(playerStats, gamesCount, lastAttendances, favoriteTeam[:5]).Render(ctx, w)
+	return templates.Player(playerStats, gamesCount, lastAttendances, favoriteTeam[:5]).Render(ctx, w)
 }

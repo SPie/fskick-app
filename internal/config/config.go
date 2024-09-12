@@ -8,59 +8,59 @@ import (
 )
 
 type AppConfig struct {
-    ApiHost string
-    DbConfig db.DbConfig
-    ServerHost string
-    ImprintText string
+	ApiHost     string
+	DbConfig    db.DbConfig
+	ServerHost  string
+	ImprintText string
 }
 
 func LoadCliConfig() (AppConfig, error) {
-    cfg, err := loadEnvConfig()
-    if err != nil {
-        return AppConfig{}, err
-    }
+	cfg, err := loadEnvConfig()
+	if err != nil {
+		return AppConfig{}, err
+	}
 
-    setDbConfig(&cfg)
+	setDbConfig(&cfg)
 
-    return cfg, nil
+	return cfg, nil
 }
 
 func LoadServerConfig() (AppConfig, error) {
-    cfg, err := loadEnvConfig()
-    if err != nil {
-        return AppConfig{}, err
-    }
+	cfg, err := loadEnvConfig()
+	if err != nil {
+		return AppConfig{}, err
+	}
 
-    setDbConfig(&cfg)
-    setApiConfig(&cfg)
+	setDbConfig(&cfg)
+	setApiConfig(&cfg)
 
-    cfg.ImprintText = os.Getenv("IMPRINT_TEXT")
+	cfg.ImprintText = os.Getenv("IMPRINT_TEXT")
 
-    return cfg, nil
+	return cfg, nil
 }
 
 func loadEnvConfig() (AppConfig, error) {
-    var cfg AppConfig
-    err := godotenv.Load()
-    if err != nil {
-        return AppConfig{}, err
-    }
+	var cfg AppConfig
+	err := godotenv.Load()
+	if err != nil {
+		return AppConfig{}, err
+	}
 
-    return cfg, nil
+	return cfg, nil
 }
 
 func setDbConfig(cfg *AppConfig) {
-    cfg.DbConfig = db.CreateDbConfig(
-        os.Getenv("DB_DATABASE"),
-        os.Getenv("DB_LOG") == "true",
-        os.Getenv("DB_DEBUG") == "true",
-    )
+	cfg.DbConfig = db.CreateDbConfig(
+		os.Getenv("DB_DATABASE"),
+		os.Getenv("DB_LOG") == "true",
+		os.Getenv("DB_DEBUG") == "true",
+	)
 }
 
 func setApiConfig(cfg *AppConfig) {
-    cfg.ApiHost = os.Getenv("API_HOST")
+	cfg.ApiHost = os.Getenv("API_HOST")
 }
 
 func setServerConfig(cfg *AppConfig) {
-    cfg.ServerHost = os.Getenv("HTTP_HOST")
+	cfg.ServerHost = os.Getenv("HTTP_HOST")
 }

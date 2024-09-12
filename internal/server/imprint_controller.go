@@ -1,27 +1,27 @@
 package server
 
 import (
-    "net/http"
+	"net/http"
 
-    "github.com/spie/fskick/internal/views"
+	"github.com/spie/fskick/internal/views"
 )
 
 type ImprintController struct {
-    imprintText string
-    imprintView views.ImprintView
+	imprintText string
+	imprintView views.ImprintView
 }
 
 func NewImprintController(imprintText string, imprintView views.ImprintView) ImprintController {
-    return ImprintController{
-        imprintText: imprintText,
-        imprintView: imprintView,
-    }
+	return ImprintController{
+		imprintText: imprintText,
+		imprintView: imprintView,
+	}
 }
 
 func (controller ImprintController) Imprint(res http.ResponseWriter, req *http.Request) {
-    err := controller.imprintView.Render(controller.imprintText, req.Context(), res)
-    if err != nil {
-        handleInternalServerError(res, err)
-        return
-    }
+	err := controller.imprintView.Render(controller.imprintText, req.Context(), res)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
 }

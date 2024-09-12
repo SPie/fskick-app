@@ -13,16 +13,16 @@ import (
 type PlayerStats struct {
 	PlayerAttendance
 	PointsRatio float64
-	Points int
-	WinRatio float64
-	GamesRatio float64
-	Position int
+	Points      int
+	WinRatio    float64
+	GamesRatio  float64
+	Position    int
 }
 
 type Manager struct {
-	gameRepository GamesRepository
+	gameRepository       GamesRepository
 	attendanceRepository AttendanceRepository
-	seasonsManager seasons.Manager
+	seasonsManager       seasons.Manager
 }
 
 func NewManager(
@@ -31,9 +31,9 @@ func NewManager(
 	seasonsManager seasons.Manager,
 ) Manager {
 	return Manager{
-		gameRepository: gameRepository,
+		gameRepository:       gameRepository,
 		attendanceRepository: attendanceRepository,
-		seasonsManager: seasonsManager,
+		seasonsManager:       seasonsManager,
 	}
 }
 
@@ -70,7 +70,7 @@ func createAttendances(team players.Team, win bool) []Attendance {
 
 	for i, player := range team {
 		attendances[i] = Attendance{
-			Win: win,
+			Win:      win,
 			PlayerID: player.ID,
 		}
 	}
@@ -171,7 +171,7 @@ func createPlayerStats(playerAttendances []PlayerAttendance, gamesCount int, max
 		stats.GamesRatio = float64(stats.Games) / float64(gamesCount)
 		stats.Points = stats.Wins * 3
 		stats.PointsRatio = float64(stats.Points) /
-			math.Max(float64(stats.Games), float64(maxGamesCount / 2))
+			math.Max(float64(stats.Games), float64(maxGamesCount/2))
 		playerStats[i] = stats
 	}
 
@@ -205,47 +205,47 @@ func getSortAndPositionFunc(
 	switch sortName {
 	case "wins":
 		return func(p, q int) bool {
-			if (playerStats)[p].Wins == (playerStats)[q].Wins {
-				return (playerStats)[p].Games > (playerStats)[q].Games
-			}
+				if (playerStats)[p].Wins == (playerStats)[q].Wins {
+					return (playerStats)[p].Games > (playerStats)[q].Games
+				}
 
-			return (playerStats)[p].Wins > (playerStats)[q].Wins
-		},
-		func(p PlayerStats) float64 {
-			return float64(p.Wins)
-		}
+				return (playerStats)[p].Wins > (playerStats)[q].Wins
+			},
+			func(p PlayerStats) float64 {
+				return float64(p.Wins)
+			}
 	case "games":
 		return func(p, q int) bool {
-			if (playerStats)[p].Games == (playerStats)[q].Games {
-				return (playerStats)[p].Wins > (playerStats)[q].Wins
-			}
+				if (playerStats)[p].Games == (playerStats)[q].Games {
+					return (playerStats)[p].Wins > (playerStats)[q].Wins
+				}
 
-			return (playerStats)[p].Games > (playerStats)[q].Games
-		},
-		func(p PlayerStats) float64 {
-			return float64(p.Games)
-		}
+				return (playerStats)[p].Games > (playerStats)[q].Games
+			},
+			func(p PlayerStats) float64 {
+				return float64(p.Games)
+			}
 	case "winRatio":
 		return func(p, q int) bool {
-			if (playerStats)[p].WinRatio == (playerStats)[q].WinRatio {
-				return (playerStats)[p].Games > (playerStats)[q].Games
-			}
+				if (playerStats)[p].WinRatio == (playerStats)[q].WinRatio {
+					return (playerStats)[p].Games > (playerStats)[q].Games
+				}
 
-			return (playerStats)[p].WinRatio > (playerStats)[q].WinRatio
-		},
-		func(p PlayerStats) float64 {
-			return p.WinRatio
-		}
+				return (playerStats)[p].WinRatio > (playerStats)[q].WinRatio
+			},
+			func(p PlayerStats) float64 {
+				return p.WinRatio
+			}
 	default:
 		return func(p, q int) bool {
-			if (playerStats)[p].PointsRatio == (playerStats)[q].PointsRatio {
-				return (playerStats)[p].Games > (playerStats)[q].Games
-			}
+				if (playerStats)[p].PointsRatio == (playerStats)[q].PointsRatio {
+					return (playerStats)[p].Games > (playerStats)[q].Games
+				}
 
-			return (playerStats)[p].PointsRatio > (playerStats)[q].PointsRatio
-		},
-		func(p PlayerStats) float64 {
-			return p.PointsRatio
-		}
+				return (playerStats)[p].PointsRatio > (playerStats)[q].PointsRatio
+			},
+			func(p PlayerStats) float64 {
+				return p.PointsRatio
+			}
 	}
 }

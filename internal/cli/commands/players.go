@@ -59,7 +59,7 @@ func (createPlayerCommand *createPlayerCommand) createPlayer(cmd *cobra.Command,
 
 type getPlayersCommand struct {
 	command
-	gamesManager   games.Manager
+	gamesManager games.Manager
 }
 
 func NewGetPlayersCommand(gamesManager games.Manager) *getPlayersCommand {

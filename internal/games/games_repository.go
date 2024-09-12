@@ -11,9 +11,9 @@ import (
 
 type Game struct {
 	db.Model
-	PlayedAt time.Time
-	SeasonID uint
-	Season   *seasons.Season
+	PlayedAt    time.Time
+	SeasonID    uint
+	Season      *seasons.Season
 	Attendances []Attendance
 }
 

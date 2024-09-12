@@ -9,19 +9,19 @@ import (
 	"github.com/spie/fskick/internal/templates"
 )
 
-type SeasonsTable struct {}
+type SeasonsTable struct{}
 
 func NewSeasonTable() SeasonsTable {
-    return SeasonsTable{}
+	return SeasonsTable{}
 }
 
 func (view SeasonsTable) Render(
-    seasons []seasons.Season,
-    activeSeason seasons.Season,
-    playerStats []games.PlayerStats,
-    gamesCount int,
-    ctx context.Context,
-    w io.Writer,
+	seasons []seasons.Season,
+	activeSeason seasons.Season,
+	playerStats []games.PlayerStats,
+	gamesCount int,
+	ctx context.Context,
+	w io.Writer,
 ) error {
-    return templates.SeasonsTable(seasons, activeSeason, playerStats, gamesCount).Render(ctx, w)
+	return templates.SeasonsTable(seasons, activeSeason, playerStats, gamesCount).Render(ctx, w)
 }

@@ -9,22 +9,22 @@ import (
 	"github.com/spie/fskick/internal/templates/components"
 )
 
-type FavoriteTeamUpdate struct {}
+type FavoriteTeamUpdate struct{}
 
 func NewFavoriteTeamUpdate() FavoriteTeamUpdate {
-    return FavoriteTeamUpdate{}
+	return FavoriteTeamUpdate{}
 }
 
 func (view FavoriteTeamUpdate) Render(
-    playerStats []games.PlayerStats,
-    gamesCount int,
-    playerUuid string,
-    ctx context.Context,
-    w io.Writer,
+	playerStats []games.PlayerStats,
+	gamesCount int,
+	playerUuid string,
+	ctx context.Context,
+	w io.Writer,
 ) error {
-    options := components.TableHtmxOptions{
-	Endpoint: fmt.Sprintf("/table/players/%s/team", playerUuid),
-    }
+	options := components.TableHtmxOptions{
+		Endpoint: fmt.Sprintf("/table/players/%s/team", playerUuid),
+	}
 
-    return components.PlayerStatsTable(playerStats[:5], gamesCount, options).Render(ctx, w)
+	return components.PlayerStatsTable(playerStats[:5], gamesCount, options).Render(ctx, w)
 }

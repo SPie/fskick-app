@@ -17,7 +17,7 @@ type Attendance struct {
 
 type PlayerAttendance struct {
 	players.Player
-	Wins int
+	Wins  int
 	Games int
 }
 

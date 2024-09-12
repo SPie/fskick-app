@@ -1,18 +1,18 @@
 package views
 
 import (
-    "context"
-    "io"
+	"context"
+	"io"
 
-    "github.com/spie/fskick/internal/templates"
+	"github.com/spie/fskick/internal/templates"
 )
 
-type ImprintView struct {}
+type ImprintView struct{}
 
 func NewImprintView() ImprintView {
-    return ImprintView{}
+	return ImprintView{}
 }
 
 func (view ImprintView) Render(imprintText string, ctx context.Context, w io.Writer) error {
-    return templates.Imprint(imprintText).Render(ctx, w)
+	return templates.Imprint(imprintText).Render(ctx, w)
 }

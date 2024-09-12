@@ -14,16 +14,16 @@ var (
 )
 
 type DbConfig struct {
-	database string
+	database  string
 	withDebug bool
-	withLog bool
+	withLog   bool
 }
 
 func CreateDbConfig(database string, withDebug bool, withLog bool) DbConfig {
 	return DbConfig{
-		database: database,
+		database:  database,
 		withDebug: withDebug,
-		withLog: withLog,
+		withLog:   withLog,
 	}
 }
 

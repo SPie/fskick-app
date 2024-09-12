@@ -11,18 +11,18 @@ import (
 )
 
 type seasonResponse struct {
-	UUID string `json:"uuid"`
-	Name string `json:"name"`
-	Active bool `json:"active"`
+	UUID      string    `json:"uuid"`
+	Name      string    `json:"name"`
+	Active    bool      `json:"active"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func newSeasonResponseFromSeason(season seasons.Season) seasonResponse {
 	return seasonResponse{
-		UUID: season.UUID,
-		Name: season.Name,
-		Active: season.Active,
+		UUID:      season.UUID,
+		Name:      season.Name,
+		Active:    season.Active,
 		CreatedAt: season.CreatedAt,
 		UpdatedAt: season.UpdatedAt,
 	}
@@ -36,7 +36,7 @@ type seasonWithGamesCountResponse struct {
 func newSeasonsWithGamesCountResponse(season seasons.Season, gamesCount int) seasonWithGamesCountResponse {
 	return seasonWithGamesCountResponse{
 		seasonResponse: newSeasonResponseFromSeason(season),
-		GamesCount: gamesCount,
+		GamesCount:     gamesCount,
 	}
 }
 
@@ -52,43 +52,43 @@ func newPlayerStatsResponsesFromPlayerStats(playerStats []games.PlayerStats) pla
 }
 
 type playerStatsResponse struct {
-	UUID string `json:"uuid"`
-	Name string `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Wins int `json:"wins"`
-	Games int `json:"games"`
-	GamesRatio float64 `json:"gamesRatio"`
-	PointsRatio float64 `json:"pointsRatio"`
-	Points int `json:"points"`
-	WinRatio float64 `json:"winRatio"`
-	Position int `json:"position"`
+	UUID        string    `json:"uuid"`
+	Name        string    `json:"name"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+	Wins        int       `json:"wins"`
+	Games       int       `json:"games"`
+	GamesRatio  float64   `json:"gamesRatio"`
+	PointsRatio float64   `json:"pointsRatio"`
+	Points      int       `json:"points"`
+	WinRatio    float64   `json:"winRatio"`
+	Position    int       `json:"position"`
 }
 
 func newPlayerStatsResponseFromPlayerStats(playerStats games.PlayerStats) playerStatsResponse {
 	return playerStatsResponse{
-		UUID: playerStats.UUID,
-		Name: playerStats.Name,
-		CreatedAt: playerStats.CreatedAt,
-		UpdatedAt: playerStats.UpdatedAt,
-		Wins: playerStats.Wins,
-		Games: playerStats.Games,
-		GamesRatio: playerStats.GamesRatio,
+		UUID:        playerStats.UUID,
+		Name:        playerStats.Name,
+		CreatedAt:   playerStats.CreatedAt,
+		UpdatedAt:   playerStats.UpdatedAt,
+		Wins:        playerStats.Wins,
+		Games:       playerStats.Games,
+		GamesRatio:  playerStats.GamesRatio,
 		PointsRatio: playerStats.PointsRatio,
-		Points: playerStats.Points,
-		WinRatio: playerStats.WinRatio,
-		Position: playerStats.Position,
+		Points:      playerStats.Points,
+		WinRatio:    playerStats.WinRatio,
+		Position:    playerStats.Position,
 	}
 }
 
 type tableResponse struct {
-	Season seasonWithGamesCountResponse `json:"season"`
-	PlayerStats []playerStatsResponse `json:"playerStats"`
+	Season      seasonWithGamesCountResponse `json:"season"`
+	PlayerStats []playerStatsResponse        `json:"playerStats"`
 }
 
 func newTableResponse(season seasons.Season, gamesCount int, playerStats []games.PlayerStats) tableResponse {
 	return tableResponse{
-		Season: newSeasonsWithGamesCountResponse(season, gamesCount),
+		Season:      newSeasonsWithGamesCountResponse(season, gamesCount),
 		PlayerStats: newPlayerStatsResponsesFromPlayerStats(playerStats),
 	}
 }

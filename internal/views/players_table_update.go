@@ -9,24 +9,24 @@ import (
 	"github.com/spie/fskick/internal/templates/components"
 )
 
-type PlayersTableUpdate struct {}
+type PlayersTableUpdate struct{}
 
 func NewPlayersTableUpdate() PlayersTableUpdate {
-    return PlayersTableUpdate{}
+	return PlayersTableUpdate{}
 }
 
 func (view PlayersTableUpdate) Render(
-    playerStats []games.PlayerStats,
-    gamesCount int,
-    playerUuid string,
-    ctx context.Context,
-    w io.Writer,
+	playerStats []games.PlayerStats,
+	gamesCount int,
+	playerUuid string,
+	ctx context.Context,
+	w io.Writer,
 ) error {
-    playersTableEndpoint := "/table/players"
-    if playerUuid != "" {
-	playersTableEndpoint = fmt.Sprintf("%s/%s", playersTableEndpoint, playerUuid)
-    }
-    options := components.TableHtmxOptions{Endpoint: playersTableEndpoint}
+	playersTableEndpoint := "/table/players"
+	if playerUuid != "" {
+		playersTableEndpoint = fmt.Sprintf("%s/%s", playersTableEndpoint, playerUuid)
+	}
+	options := components.TableHtmxOptions{Endpoint: playersTableEndpoint}
 
-    return components.PlayerStatsTable(playerStats, gamesCount, options).Render(ctx, w)
+	return components.PlayerStatsTable(playerStats, gamesCount, options).Render(ctx, w)
 }

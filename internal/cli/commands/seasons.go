@@ -140,7 +140,7 @@ func NewGetTableCommand(
 	seasonsManager seasons.Manager,
 ) *getTableCommand {
 	getTableCommand := &getTableCommand{
-		gamesManager: gamesManager,
+		gamesManager:   gamesManager,
 		seasonsManager: seasonsManager,
 	}
 
