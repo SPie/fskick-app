@@ -19,6 +19,7 @@ func (view PlayersTableUpdate) Render(
 	playerStats []games.PlayerStats,
 	gamesCount int,
 	playerUuid string,
+	sort string,
 	ctx context.Context,
 	w io.Writer,
 ) error {
@@ -28,5 +29,5 @@ func (view PlayersTableUpdate) Render(
 	}
 	options := components.TableHtmxOptions{Endpoint: playersTableEndpoint}
 
-	return components.PlayerStatsTable(playerStats, gamesCount, options).Render(ctx, w)
+	return components.PlayerStatsTable(playerStats, gamesCount, sort, options).Render(ctx, w)
 }

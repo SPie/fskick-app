@@ -19,6 +19,7 @@ func (view FavoriteTeamUpdate) Render(
 	playerStats []games.PlayerStats,
 	gamesCount int,
 	playerUuid string,
+	sort string,
 	ctx context.Context,
 	w io.Writer,
 ) error {
@@ -26,5 +27,5 @@ func (view FavoriteTeamUpdate) Render(
 		Endpoint: fmt.Sprintf("/table/players/%s/team", playerUuid),
 	}
 
-	return components.PlayerStatsTable(playerStats[:5], gamesCount, options).Render(ctx, w)
+	return components.PlayerStatsTable(playerStats[:5], gamesCount, sort, options).Render(ctx, w)
 }

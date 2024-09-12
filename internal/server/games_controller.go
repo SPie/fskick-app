@@ -108,6 +108,7 @@ func (controller GamesController) SeasonsTableUpdate(res http.ResponseWriter, re
 	if err = controller.views.SeasonsTableUpdate.Render(
 		playerStats,
 		gamesCount,
+		sort,
 		req.Context(),
 		res,
 	); err != nil {
@@ -143,6 +144,7 @@ func (controller GamesController) PlayersTableUpdate(res http.ResponseWriter, re
 		playerStats,
 		gamesCount,
 		playerUuid,
+		sort,
 		req.Context(),
 		res,
 	); err != nil {
@@ -199,6 +201,7 @@ func (controller GamesController) GetFavoriteTeam(res http.ResponseWriter, req *
 		teamPlayerStats,
 		gamesCount,
 		playerUuid,
+		sort,
 		req.Context(),
 		res,
 	); err != nil {

@@ -36,6 +36,7 @@ templ SeasonsTable(
             @components.PlayerStatsTable(
                 playerStats,
                 gamesCount,
+                "pointsRatio",
                 components.TableHtmxOptions{Endpoint: "/table/seasons", Include: "select[name='season']"},
             )
         </div>

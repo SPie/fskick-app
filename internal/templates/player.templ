@@ -27,6 +27,7 @@ templ Player(
                 @components.PlayerStatsTable(
                     []games.PlayerStats{playerStats},
                     gamesCount,
+                    "pointsRatio",
                     components.TableHtmxOptions{Endpoint: fmt.Sprintf("/table/players/%s", playerStats.UUID)},
                 )
             </div>

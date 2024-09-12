@@ -15,6 +15,7 @@ templ PlayersTable(playerStats []games.PlayerStats, gamesCount int) {
             @components.PlayerStatsTable(
                 playerStats,
                 gamesCount,
+                "pointsRatio",
                 components.TableHtmxOptions{Endpoint: "/table/players"},
             )
         </div>

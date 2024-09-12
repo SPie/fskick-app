@@ -17,6 +17,7 @@ func NewSeasonsTableUpdate() SeasonsTableUpdate {
 func (view SeasonsTableUpdate) Render(
 	playerStats []games.PlayerStats,
 	gamesCount int,
+	sort string,
 	ctx context.Context,
 	w io.Writer,
 ) error {
@@ -25,5 +26,5 @@ func (view SeasonsTableUpdate) Render(
 		Include:  "select[name='season']",
 	}
 
-	return components.PlayerStatsTable(playerStats, gamesCount, options).Render(ctx, w)
+	return components.PlayerStatsTable(playerStats, gamesCount, sort, options).Render(ctx, w)
 }
