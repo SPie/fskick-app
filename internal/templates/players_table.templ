@@ -12,7 +12,11 @@ templ PlayersTable(playerStats []games.PlayerStats, gamesCount int) {
         </h2>
 
         <div>
-            @components.PlayerStatsTable(playerStats, gamesCount)
+            @components.PlayerStatsTable(
+                playerStats,
+                gamesCount,
+                components.TableHtmxOptions{Endpoint: "/table/players"},
+            )
         </div>
     }
 }

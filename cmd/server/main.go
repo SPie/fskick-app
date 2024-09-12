@@ -44,6 +44,9 @@ func main() {
 
 	gamesViews := server.NewGamesViews()
 	gamesViews.SeasonsTable = views.NewSeasonTable()
+	gamesViews.SeasonsTableUpdate = views.NewSeasonsTableUpdate()
+	gamesViews.PlayersTableUpdate = views.NewPlayersTableUpdate()
+	gamesViews.FavoriteTeamUpdate = views.NewFavoriteTeamUpdate()
 	gamesController := server.NewGamesController(gamesManager, seasonManager, playersManager, gamesViews)
 
 	seasonsController := server.NewSeasonsController(seasonManager)
@@ -73,6 +76,11 @@ func main() {
 	s.Get("/api/games/count", gamesController.GetGamesCount)
 
 	s.Get("/imprint", imprintController.Imprint)
+
+	s.Get("/table/seasons", gamesController.SeasonsTableUpdate)
+	s.Get("/table/players", gamesController.PlayersTableUpdate)
+	s.Get("/table/players/{player}", gamesController.PlayersTableUpdate)
+	s.Get("/table/players/{player}/team", gamesController.GetFavoriteTeam)
 
 	s.HandleStatic(static.Dir)
 

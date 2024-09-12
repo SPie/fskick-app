@@ -1,6 +1,8 @@
 package templates
 
 import (
+    "fmt"
+
     "github.com/spie/fskick/internal/games"
     "github.com/spie/fskick/internal/templates/components"
 )
@@ -22,13 +24,17 @@ templ Player(
             <h3 class="text-left text-sm md:text-xl font-bold">Stats</h3>
 
             <div>
-                @components.PlayerStatsTable([]games.PlayerStats{playerStats}, gamesCount)
+                @components.PlayerStatsTable(
+                    []games.PlayerStats{playerStats},
+                    gamesCount,
+                    components.TableHtmxOptions{Endpoint: fmt.Sprintf("/table/players/%s", playerStats.UUID)},
+                )
             </div>
           </div>
 
           @components.Streak(lastAttendances)
 
-          @components.FavoriteTeam(favoriteTeam, playerStats.Games)
+          @components.FavoriteTeam(playerStats.Player, favoriteTeam, playerStats.Games)
         </div>
       </div>
     }

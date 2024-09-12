@@ -86,6 +86,10 @@ func (manager Manager) GetGamesCountForSeason(season seasons.Season) (int, error
 	return manager.gameRepository.CountForSeason(season)
 }
 
+func (manager Manager) GetGamesCountForPlayer(player players.Player) (int, error) {
+	return manager.gameRepository.CountForPlayer(player)
+}
+
 func (manager Manager) GetPlayerStatsForSeason(season seasons.Season, sort string) ([]PlayerStats, error) {
 	playerAttendances, err := manager.attendanceRepository.CollectPlayerAttendancesForSeason(season)
 	if err != nil {

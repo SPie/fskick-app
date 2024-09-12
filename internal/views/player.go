@@ -22,5 +22,5 @@ func (view PlayerInfo) Render(
     ctx context.Context,
     w io.Writer,
 ) error {
-    return templates.Player(playerStats, gamesCount, lastAttendances, favoriteTeam).Render(ctx, w)
+    return templates.Player(playerStats, gamesCount, lastAttendances, favoriteTeam[:5]).Render(ctx, w)
 }

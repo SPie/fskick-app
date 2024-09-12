@@ -16,7 +16,7 @@ templ SeasonsTable(
         if len(seasons) > 0 {
             <h2 class="text-center text-md md:text-2xl font-bold">
                 Season
-                <select class="bg-gray-900">
+                <select name="season" class="bg-gray-900" hx-get="/table/seasons" hx-target="next table" hx-swap="outerHTML">
                     for _, season := range seasons {
                         <option value={season.UUID} 
                             if season.UUID == activeSeason.UUID {
@@ -33,7 +33,11 @@ templ SeasonsTable(
         }
 
         <div>
-            @components.PlayerStatsTable(playerStats, gamesCount)
+            @components.PlayerStatsTable(
+                playerStats,
+                gamesCount,
+                components.TableHtmxOptions{Endpoint: "/table/seasons", Include: "select[name='season']"},
+            )
         </div>
     }
 }

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/spie/fskick/internal/games"
@@ -11,6 +13,9 @@ import (
 
 type GamesViews struct {
     SeasonsTable views.SeasonsTable
+    SeasonsTableUpdate views.SeasonsTableUpdate
+    PlayersTableUpdate views.PlayersTableUpdate
+    FavoriteTeamUpdate views.FavoriteTeamUpdate
 }
 
 func NewGamesViews() GamesViews {
@@ -63,15 +68,84 @@ func (controller GamesController) TablePage(res http.ResponseWriter, req *http.R
         return
     }
 
-    err = controller.views.SeasonsTable.Render(
+    if err = controller.views.SeasonsTable.Render(
         seasons,
         season,
         playerStats,
         gamesCount,
         req.Context(),
         res,
-    )
+    ); err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+}
+
+func (controller GamesController) SeasonsTableUpdate(res http.ResponseWriter, req *http.Request) {
+    sort := req.URL.Query().Get("sort")
+    if sort == "" {
+        sort = "pointsRatio"
+    }
+
+    season, err := controller.getSeason(req.URL.Query().Get("season"))
     if err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+
+    playerStats, err := controller.gamesManager.GetPlayerStatsForSeason(season, sort)
+    if err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+
+    gamesCount, err := controller.gamesManager.GetGamesCountForSeason(season)
+    if err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+
+    if err = controller.views.SeasonsTableUpdate.Render(
+        playerStats,
+        gamesCount,
+        req.Context(),
+        res,
+    ); err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+}
+
+func (controller GamesController) PlayersTableUpdate(res http.ResponseWriter, req *http.Request) {
+    sort := req.URL.Query().Get("sort")
+    if sort == "" {
+        sort = "pointsRatio"
+    }
+
+    playerStats, err := controller.gamesManager.GetAllPlayerStats(sort)
+    if err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+
+    gamesCount, err := controller.gamesManager.GetGamesCount()
+    if err != nil {
+        handleInternalServerError(res, err)
+        return
+    }
+
+    playerUuid := req.PathValue("player")
+    if playerUuid != "" {
+            playerStats = filterPlayersStatsForUuid(playerStats, playerUuid)
+    }
+
+    if err = controller.views.PlayersTableUpdate.Render(
+        playerStats,
+        gamesCount,
+        playerUuid,
+        req.Context(),
+        res,
+    ); err != nil {
         handleInternalServerError(res, err)
         return
     }
@@ -91,13 +165,55 @@ func (controller GamesController) GetGamesCount(res http.ResponseWriter, _ *http
     }
 }
 
+func (controller GamesController) GetFavoriteTeam(res http.ResponseWriter, req *http.Request) {
+        playerUuid := req.PathValue("player")
+
+        player, err := controller.playersManager.GetPlayerByUUID(playerUuid)
+        if errors.Is(err, players.ErrPlayerNotFound) {
+                http.Error(res, fmt.Sprintf("Player %s not found", playerUuid), http.StatusUnprocessableEntity)
+                return
+        }
+        if err != nil {
+                handleInternalServerError(res, err)
+                return
+        }
+
+        sort := req.URL.Query().Get("sort")
+        if sort == "" {
+                sort = "pointsRatio"
+        }
+
+        teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(player, sort)
+        if err != nil {
+                handleInternalServerError(res, err)
+                return
+        }
+
+        gamesCount, err := controller.gamesManager.GetGamesCountForPlayer(player)
+        if err != nil {
+                handleInternalServerError(res, err)
+                return
+        }
+
+        if err = controller.views.FavoriteTeamUpdate.Render(
+            teamPlayerStats,
+            gamesCount,
+            playerUuid,
+            req.Context(),
+            res,
+        ); err != nil {
+            handleInternalServerError(res, err)
+            return
+        }
+}
+
 func (controller GamesController) GetTable(res http.ResponseWriter, req *http.Request) {
     sort := req.URL.Query().Get("sort")
     if sort == "" {
         sort = "pointsRatio"
     }
 
-    tableRes, err := controller.getTable("", sort)
+    tableRes, err := controller.getTable(req.PathValue("season"), sort)
     if err != nil {
         handleInternalServerError(res, err)
         return

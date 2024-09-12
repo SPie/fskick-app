@@ -7,30 +7,31 @@ import (
     "github.com/spie/fskick/internal/games"
 )
 
-templ PlayerStatsTable(playerStats []games.PlayerStats, gamesCount int) {
+templ PlayerStatsTable(playerStats []games.PlayerStats, gamesCount int, options TableHtmxOptions) {
     <table class="mx-auto text-xs md:text-base table-fixed">
         <thead>
             <tr>
-                @PlayerStatsHead(false) {
+                @PlayerStatsHead() {
                     Pos ({strconv.Itoa(len(playerStats))})
                 }
-                @PlayerStatsHead(false) {
+                @PlayerStatsHead() {
                     Player
                 }
-                @PlayerStatsHead(true) {
+                @PlayerStatsHeadSortable("pointsRatio", true, options) {
                     Points
                 }
-                @PlayerStatsHead(false) {
+                @PlayerStatsHeadSortable("wins", false, options) {
                     Wins
                 }
-                @PlayerStatsHead(false) {
+                @PlayerStatsHeadSortable("games", false, options) {
                     Games ({strconv.Itoa(gamesCount)})
                 }
-                @PlayerStatsHead(false) {
+                @PlayerStatsHeadSortable("winRatio", false, options) {
                     Win Ratio
                 }
             </tr>
         </thead>
+
         <tbody>
             for _, player := range playerStats {
                 <tr>
