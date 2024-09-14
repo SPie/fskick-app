@@ -13,6 +13,8 @@ import (
 
 type GamesViews struct {
 	SeasonsTable       views.SeasonsTable
+	PlayersTable       views.PlayersTable
+	PlayerInfo         views.PlayerInfo
 	SeasonsTableUpdate views.SeasonsTableUpdate
 	PlayersTableUpdate views.PlayersTableUpdate
 	FavoriteTeamUpdate views.FavoriteTeamUpdate
@@ -43,26 +45,14 @@ func NewGamesController(
 	}
 }
 
-func (controller GamesController) TablePage(res http.ResponseWriter, req *http.Request) {
+func (controller GamesController) SeasonsTable(res http.ResponseWriter, req *http.Request) {
 	seasons, err := controller.seasonsManager.GetSeasons()
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 
-	season, err := controller.getSeason("")
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	playerStats, err := controller.gamesManager.GetPlayerStatsForSeason(season, "pointsRatio")
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	gamesCount, err := controller.gamesManager.GetGamesCountForSeason(season)
+	seasonTableData, err := controller.getSeasonsTableData("", getSort(req))
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
@@ -70,9 +60,9 @@ func (controller GamesController) TablePage(res http.ResponseWriter, req *http.R
 
 	if err = controller.views.SeasonsTable.Render(
 		seasons,
-		season,
-		playerStats,
-		gamesCount,
+		seasonTableData.season,
+		seasonTableData.playerStats,
+		seasonTableData.gamesCount,
 		req.Context(),
 		res,
 	); err != nil {
@@ -82,32 +72,17 @@ func (controller GamesController) TablePage(res http.ResponseWriter, req *http.R
 }
 
 func (controller GamesController) SeasonsTableUpdate(res http.ResponseWriter, req *http.Request) {
-	sort := req.URL.Query().Get("sort")
-	if sort == "" {
-		sort = "pointsRatio"
-	}
+	sort := getSort(req)
 
-	season, err := controller.getSeason(req.URL.Query().Get("season"))
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	playerStats, err := controller.gamesManager.GetPlayerStatsForSeason(season, sort)
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	gamesCount, err := controller.gamesManager.GetGamesCountForSeason(season)
+	seasonTableData, err := controller.getSeasonsTableData(req.URL.Query().Get("season"), sort)
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 
 	if err = controller.views.SeasonsTableUpdate.Render(
-		playerStats,
-		gamesCount,
+		seasonTableData.playerStats,
+		seasonTableData.gamesCount,
 		sort,
 		req.Context(),
 		res,
@@ -117,32 +92,38 @@ func (controller GamesController) SeasonsTableUpdate(res http.ResponseWriter, re
 	}
 }
 
+func (controller GamesController) PlayersTable(res http.ResponseWriter, req *http.Request) {
+	playersTableData, err := controller.getPlayersTableData("", getSort(req))
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	err = controller.views.PlayersTable.Render(
+		playersTableData.playerStats,
+		playersTableData.gamesCount,
+		req.Context(),
+		res,
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+}
+
 func (controller GamesController) PlayersTableUpdate(res http.ResponseWriter, req *http.Request) {
-	sort := req.URL.Query().Get("sort")
-	if sort == "" {
-		sort = "pointsRatio"
-	}
-
-	playerStats, err := controller.gamesManager.GetAllPlayerStats(sort)
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	gamesCount, err := controller.gamesManager.GetGamesCount()
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
 	playerUuid := req.PathValue("player")
-	if playerUuid != "" {
-		playerStats = filterPlayersStatsForUuid(playerStats, playerUuid)
+	sort := getSort(req)
+
+	playersTableData, err := controller.getPlayersTableData(playerUuid, sort)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
 	}
 
 	if err = controller.views.PlayersTableUpdate.Render(
-		playerStats,
-		gamesCount,
+		playersTableData.playerStats,
+		playersTableData.gamesCount,
 		playerUuid,
 		sort,
 		req.Context(),
@@ -153,37 +134,60 @@ func (controller GamesController) PlayersTableUpdate(res http.ResponseWriter, re
 	}
 }
 
-func (controller GamesController) GetGamesCount(res http.ResponseWriter, _ *http.Request) {
-	gamesCount, err := controller.gamesManager.GetGamesCount()
+func (controller GamesController) PlayerInfo(res http.ResponseWriter, req *http.Request) {
+	playerUuid := req.PathValue("player")
+
+	sort := getSort(req)
+
+	playersTableData, err := controller.getPlayersTableData(playerUuid, sort)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+	if len(playersTableData.playerStats) != 1 {
+		http.Error(res, fmt.Sprintf("Player %s not found", playerUuid), http.StatusUnprocessableEntity)
+		return
+	}
+
+	attendances, err := controller.gamesManager.GetAttendancesForPlayer(playersTableData.playerStats[0].Player)
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 
-	err = writeJsonResponse(res, map[string]int{"gamesCount": gamesCount})
+	teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(
+		playersTableData.playerStats[0].Player,
+		sort,
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	err = controller.views.PlayerInfo.Render(
+		playersTableData.playerStats[0],
+		playersTableData.gamesCount,
+		attendances,
+		teamPlayerStats,
+		req.Context(),
+		res,
+	)
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 }
 
-func (controller GamesController) GetFavoriteTeam(res http.ResponseWriter, req *http.Request) {
+func (controller GamesController) FavoriteTeamUpdate(res http.ResponseWriter, req *http.Request) {
 	playerUuid := req.PathValue("player")
 
-	player, err := controller.playersManager.GetPlayerByUUID(playerUuid)
-	if errors.Is(err, players.ErrPlayerNotFound) {
-		http.Error(res, fmt.Sprintf("Player %s not found", playerUuid), http.StatusUnprocessableEntity)
-		return
-	}
+	player, err := controller.getPlayer(playerUuid)
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 
-	sort := req.URL.Query().Get("sort")
-	if sort == "" {
-		sort = "pointsRatio"
-	}
+	sort := getSort(req)
 
 	teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(player, sort)
 	if err != nil {
@@ -210,45 +214,137 @@ func (controller GamesController) GetFavoriteTeam(res http.ResponseWriter, req *
 	}
 }
 
-func (controller GamesController) GetTable(res http.ResponseWriter, req *http.Request) {
-	sort := req.URL.Query().Get("sort")
-	if sort == "" {
-		sort = "pointsRatio"
-	}
-
-	tableRes, err := controller.getTable(req.PathValue("season"), sort)
+func (controller GamesController) GetGamesCount(res http.ResponseWriter, _ *http.Request) {
+	gamesCount, err := controller.gamesManager.GetGamesCount()
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 
-	err = writeJsonResponse(res, tableRes)
+	err = writeJsonResponse(res, map[string]int{"gamesCount": gamesCount})
 	if err != nil {
 		handleInternalServerError(res, err)
 		return
 	}
 }
 
-func (controller GamesController) getTable(
+func (controller GamesController) GetSeasonsTable(res http.ResponseWriter, req *http.Request) {
+	seasonTableData, err := controller.getSeasonsTableData(req.PathValue("season"), getSort(req))
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	err = writeJsonResponse(
+		res,
+		newTableResponse(seasonTableData.season, seasonTableData.gamesCount, seasonTableData.playerStats),
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+}
+
+func (controller GamesController) GetPlayers(res http.ResponseWriter, req *http.Request) {
+	playerStats, err := controller.gamesManager.GetAllPlayerStats(getSort(req))
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	playerUuid := req.PathValue("player")
+	if playerUuid != "" {
+		playerStats = filterPlayersStatsForUuid(playerStats, playerUuid)
+	}
+
+	err = writeJsonResponse(
+		res,
+		map[string][]playerStatsResponse{"playerStats": newPlayerStatsResponsesFromPlayerStats(playerStats)},
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+}
+
+func (controller GamesController) GetFavoriteTeam(res http.ResponseWriter, req *http.Request) {
+	playerUuid := req.PathValue("player")
+
+	player, err := controller.getPlayer(playerUuid)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	teamPlayerStats, err := controller.gamesManager.GetFellowPlayerStats(player, getSort(req))
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	err = writeJsonResponse(
+		res,
+		map[string][]playerStatsResponse{"playerStats": newPlayerStatsResponsesFromPlayerStats(teamPlayerStats)},
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+}
+
+type seasonTableData struct {
+	playerTableData
+	season seasons.Season
+}
+
+func (controller GamesController) getSeasonsTableData(
 	seasonUuid string,
 	sort string,
-) (tableResponse, error) {
+) (seasonTableData, error) {
 	season, err := controller.getSeason(seasonUuid)
 	if err != nil {
-		return tableResponse{}, err
+		return seasonTableData{}, err
 	}
 
 	playerStats, err := controller.gamesManager.GetPlayerStatsForSeason(season, sort)
 	if err != nil {
-		return tableResponse{}, err
+		return seasonTableData{}, err
 	}
 
 	gamesCount, err := controller.gamesManager.GetGamesCountForSeason(season)
 	if err != nil {
-		return tableResponse{}, err
+		return seasonTableData{}, err
 	}
 
-	return newTableResponse(season, gamesCount, playerStats), nil
+	return seasonTableData{
+		season: season,
+		playerTableData: playerTableData{
+			playerStats: playerStats,
+			gamesCount:  gamesCount,
+		},
+	}, nil
+}
+
+type playerTableData struct {
+	playerStats []games.PlayerStats
+	gamesCount  int
+}
+
+func (controller GamesController) getPlayersTableData(playerUuid string, sort string) (playerTableData, error) {
+	playerStats, err := controller.gamesManager.GetAllPlayerStats(sort)
+	if err != nil {
+		return playerTableData{}, err
+	}
+	if playerUuid != "" {
+		playerStats = filterPlayersStatsForUuid(playerStats, playerUuid)
+	}
+
+	gamesCount, err := controller.gamesManager.GetGamesCount()
+	if err != nil {
+		return playerTableData{}, err
+	}
+
+	return playerTableData{playerStats: playerStats, gamesCount: gamesCount}, nil
 }
 
 func (controller GamesController) getSeason(seasonUuid string) (seasons.Season, error) {
@@ -257,4 +353,35 @@ func (controller GamesController) getSeason(seasonUuid string) (seasons.Season, 
 	}
 
 	return controller.seasonsManager.ActiveSeason()
+}
+
+func (controller GamesController) getPlayer(playerUuid string) (players.Player, error) {
+	player, err := controller.playersManager.GetPlayerByUUID(playerUuid)
+	if errors.Is(err, players.ErrPlayerNotFound) {
+		return players.Player{}, errors.New(fmt.Sprintf("Player %s not found", playerUuid))
+	}
+	if err != nil {
+		return players.Player{}, err
+	}
+
+	return player, nil
+}
+
+func filterPlayersStatsForUuid(playersStats []games.PlayerStats, uuid string) []games.PlayerStats {
+	for _, playerStats := range playersStats {
+		if playerStats.Player.UUID == uuid {
+			return []games.PlayerStats{playerStats}
+		}
+	}
+
+	return []games.PlayerStats{}
+}
+
+func getSort(req *http.Request) string {
+	sort := req.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "pointsRatio"
+	}
+
+	return sort
 }

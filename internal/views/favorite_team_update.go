@@ -27,5 +27,18 @@ func (view FavoriteTeamUpdate) Render(
 		Endpoint: fmt.Sprintf("/table/players/%s/team", playerUuid),
 	}
 
-	return components.PlayerStatsTable(playerStats[:5], gamesCount, sort, options).Render(ctx, w)
+	return components.PlayerStatsTable(
+		getFavoriteTeamOf5(playerStats),
+		gamesCount,
+		sort,
+		options,
+	).Render(ctx, w)
+}
+
+func getFavoriteTeamOf5(playerStats []games.PlayerStats) []games.PlayerStats {
+	if len(playerStats) <= 5 {
+		return playerStats
+	}
+
+	return playerStats[:5]
 }

@@ -10,7 +10,7 @@ templ Streak(attendances []games.Attendance) {
 
         <div class="my-5 flex space-x-4">
             <div class="my-5 flex space-x-4 mx-auto">
-                for _, attendance := range attendances[len(attendances) - 5:] {
+                for _, attendance := range getAttendancesForStreak(attendances) {
                     <span class={templ.Class("border-1 inline-block rounded-full w-8 h-8 " + getStreakColor(attendance))} />
                 }
             </div>
@@ -24,4 +24,12 @@ func getStreakColor(attendance games.Attendance) string {
     }
 
     return "border-red bg-red"
+}
+
+func getAttendancesForStreak(attendances []games.Attendance) []games.Attendance {
+    if len(attendances) <= 5 {
+        return attendances
+    }
+
+    return attendances[len(attendances) - 5:]
 }

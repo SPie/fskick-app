@@ -44,6 +44,8 @@ func main() {
 
 	gamesViews := server.NewGamesViews()
 	gamesViews.SeasonsTable = views.NewSeasonTable()
+	gamesViews.PlayersTable = views.NewPlayersTable()
+	gamesViews.PlayerInfo = views.NewPlayerInfo()
 	gamesViews.SeasonsTableUpdate = views.NewSeasonsTableUpdate()
 	gamesViews.PlayersTableUpdate = views.NewPlayersTableUpdate()
 	gamesViews.FavoriteTeamUpdate = views.NewFavoriteTeamUpdate()
@@ -51,36 +53,28 @@ func main() {
 
 	seasonsController := server.NewSeasonsController(seasonManager)
 
-	playersViews := server.NewPlayersViews()
-	playersViews.PlayersTable = views.NewPlayersTable()
-	playersViews.PlayerInfo = views.NewPlayerInfo()
-	playersController := server.NewPlayersController(playersManager, gamesManager, playersViews)
-
 	imprintView := views.NewImprintView()
 	imprintController := server.NewImprintController(cfg.ImprintText, imprintView)
 
 	s := server.New(cfg.ApiHost)
 
-	s.Get("/", gamesController.TablePage)
-	s.Get("/players", playersController.GetPlayersTable)
-	s.Get("/players/{player}", playersController.GetPlayerInfo)
-
-	s.Get("/api/seasons", seasonsController.GetSeasons)
-	s.Get("/api/seasons/table", gamesController.GetTable)
-	s.Get("/api/seasons/table/{season}", gamesController.GetTable)
-
-	s.Get("/api/players", playersController.GetPlayers)
-	s.Get("/api/players/{player}/team", playersController.GetFavoriteTeam)
-	s.Get("/api/players/{player}", playersController.GetPlayers)
-
-	s.Get("/api/games/count", gamesController.GetGamesCount)
-
+	s.Get("/", gamesController.SeasonsTable)
+	s.Get("/players", gamesController.PlayersTable)
+	s.Get("/players/{player}", gamesController.PlayerInfo)
 	s.Get("/imprint", imprintController.Imprint)
 
 	s.Get("/table/seasons", gamesController.SeasonsTableUpdate)
 	s.Get("/table/players", gamesController.PlayersTableUpdate)
 	s.Get("/table/players/{player}", gamesController.PlayersTableUpdate)
-	s.Get("/table/players/{player}/team", gamesController.GetFavoriteTeam)
+	s.Get("/table/players/{player}/team", gamesController.FavoriteTeamUpdate)
+
+	s.Get("/api/seasons", seasonsController.GetSeasons)
+	s.Get("/api/seasons/table", gamesController.GetSeasonsTable)
+	s.Get("/api/seasons/table/{season}", gamesController.GetSeasonsTable)
+	s.Get("/api/players", gamesController.GetPlayers)
+	s.Get("/api/players/{player}/team", gamesController.GetFavoriteTeam)
+	s.Get("/api/players/{player}", gamesController.GetPlayers)
+	s.Get("/api/games/count", gamesController.GetGamesCount)
 
 	s.HandleStatic(static.Dir)
 
