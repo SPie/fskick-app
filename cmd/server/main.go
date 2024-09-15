@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/spie/fskick/cmd/server/static"
 	"github.com/spie/fskick/internal/config"
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
@@ -12,8 +13,10 @@ import (
 	"github.com/spie/fskick/internal/server"
 	"github.com/spie/fskick/internal/views"
 	"github.com/spie/fskick/migrations"
-	"github.com/spie/fskick/static"
 )
+
+//go:generate templ generate -path ../../internal/templates
+//go:generate npx tailwindcss build -c tailwind.config.js -i ./static/css/style.css -o ./static/css/tailwind.css -m
 
 func main() {
 	cfg, err := config.LoadServerConfig()
