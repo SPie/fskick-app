@@ -1,0 +1,42 @@
+package templates
+
+import (
+    "fmt"
+
+    "github.com/spie/fskick/internal/games"
+    "github.com/spie/fskick/internal/templates/components"
+)
+
+templ Player(
+    playerStats games.PlayerStats,
+    gamesCount int,
+    lastAttendances []games.Attendance,
+    favoriteTeam []games.PlayerStats,
+) {
+    @layout() {
+      <div>
+        <h2 class="text-center text-md md:text-2xl font-bold">
+          {playerStats.Name}
+        </h2>
+
+        <div class="mx-auto w-4/5">
+          <div class="my-5">
+            <h3 class="text-left text-sm md:text-xl font-bold">Stats</h3>
+
+            <div>
+                @components.PlayerStatsTable(
+                    []games.PlayerStats{playerStats},
+                    gamesCount,
+                    "pointsRatio",
+                    components.TableHtmxOptions{Endpoint: fmt.Sprintf("/table/players/%s", playerStats.UUID)},
+                )
+            </div>
+          </div>
+
+          @components.Streak(lastAttendances)
+
+          @components.FavoriteTeam(playerStats.Player, favoriteTeam, playerStats.Games)
+        </div>
+      </div>
+    }
+}

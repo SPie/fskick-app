@@ -1,0 +1,65 @@
+package components
+
+import (
+    "fmt"
+    "strconv"
+
+    "github.com/spie/fskick/internal/games"
+)
+
+templ PlayerStatsTable(
+    playerStats []games.PlayerStats,
+    gamesCount int,
+    sort string,
+    options TableHtmxOptions,
+) {
+    <table class="mx-auto text-xs md:text-base table-fixed">
+        <thead>
+            <tr>
+                @PlayerStatsHead() {
+                    Pos ({strconv.Itoa(len(playerStats))})
+                }
+                @PlayerStatsHead() {
+                    Player
+                }
+                @PlayerStatsHeadSortable("pointsRatio", sort == "pointsRatio", options) {
+                    Points
+                }
+                @PlayerStatsHeadSortable("wins", sort == "wins", options) {
+                    Wins
+                }
+                @PlayerStatsHeadSortable("games", sort == "games", options) {
+                    Games ({strconv.Itoa(gamesCount)})
+                }
+                @PlayerStatsHeadSortable("winRatio", sort == "winRatio", options) {
+                    Win Ratio
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            for _, player := range playerStats {
+                <tr>
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Position)}
+                    }
+                    @PlayerStatsColumn(true) {
+                        <a href={templ.URL(fmt.Sprintf("/players/%s", player.UUID))}>{player.Name}</a>
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.FormatFloat(player.PointsRatio, 'f', 2, 64)}
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Wins)}
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.Itoa(player.Games)} ({strconv.FormatFloat(player.GamesRatio * 100, 'f', 2, 64)} %)
+                    }
+                    @PlayerStatsColumn(false) {
+                        {strconv.FormatFloat(player.WinRatio * 100, 'f', 2, 64)} %
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}

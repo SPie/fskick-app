@@ -1,0 +1,32 @@
+package templates
+
+templ layout() {
+    @root() {
+        <div class="bg-black text-gray-100">
+            <div class="min-h-screen">
+              <nav class="bg-gradient-to-b from-gray-900 to-gray-300 via-gray-600">
+                <div class="flex items-center">
+                  <div>
+                    <h1 class="lg:text-5xl text-2xl font-bold px-3 md:px-5 md:py-5">
+                      <a href="/">FSKick</a>
+                    </h1>
+                  </div>
+                  <div class="ml-10 flex items-baseline md:space-x-4 text-sm md:text-xl font-medium">
+                    <a href="/" class="pr-3 py-2 rounded-md">Seasons</a>
+                    <a href="/players" class="pr-3 py-2 rounded-md">Players</a>
+                  </div>
+                </div>
+              </nav>
+
+              <div class="py-2 px-2">
+                <div class="mx-auto bg-gradient-to-b from-gray-900 to-gray-300 via-gray-600 p-5 rounded-lg shadow xl:w-1/2 lg:w-3/4 sm:w-11/12 container hover:from-gray-800 hover:to-gray-200 hover:via-gray-500">
+                    { children... }
+                </div>
+              </div>
+
+            </div>
+
+            <footer class="text-center text-xs"><a href="/imprint">Imprint</a></footer>
+        </div>
+    }
+}

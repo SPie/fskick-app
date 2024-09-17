@@ -1,2 +1,5 @@
-.env
+.env*
 /data
+*templ.go
+static/css/tailwind.css
+tmp
