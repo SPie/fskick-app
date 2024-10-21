@@ -21,6 +21,11 @@ type PlayerAttendance struct {
 	Games int
 }
 
+type PlayerWithAttendances struct {
+	players.Player
+	Attendances []Attendance
+}
+
 type AttendanceRepository struct {
 	dbHandler db.Handler
 }
@@ -132,7 +137,7 @@ func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Pl
 		player.ID,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get last x attendances for player: %w", err)
+		return nil, fmt.Errorf("get last attendances for player: %w", err)
 	}
 	defer rows.Close()
 
@@ -153,6 +158,51 @@ func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Pl
 	}
 
 	return attendances, nil
+}
+
+func (repository AttendanceRepository) GetAttendancesForAllPlayers() ([]PlayerWithAttendances, error) {
+	rows, err := repository.dbHandler.Query(
+		`SELECT p.id, p.uuid, p.name, p.created_at, a.id, a.uuid, a.win, a.created_at
+		FROM players p
+		JOIN attendances a ON p.id = a.player_id
+		JOIN games g ON g.id = a.game_id
+		ORDER BY g.played_at ASC
+		`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get all attendances for all players: %w", err)
+	}
+	defer rows.Close()
+
+	playersWithAttendances := map[uint]*PlayerWithAttendances{}
+	for rows.Next() {
+		var player players.Player
+		var attendance Attendance
+		err = rows.Scan(
+			&player.ID,
+			&player.UUID,
+			&player.Name,
+			&player.CreatedAt,
+			&attendance.ID,
+			&attendance.UUID,
+			&attendance.Win,
+			&attendance.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan player with attendances rows: %w", err)
+		}
+
+		if _, ok := playersWithAttendances[player.ID]; !ok {
+			playersWithAttendances[player.ID] = &PlayerWithAttendances{Player: player}
+		}
+
+		playersWithAttendances[player.ID].Attendances = append(
+			playersWithAttendances[player.ID].Attendances,
+			attendance,
+		)
+	}
+
+	return getPlayersWithAttendancesFromMap(playersWithAttendances), nil
 }
 
 func getPlayerAttendanceColumns() string {
@@ -187,4 +237,15 @@ func scanPlayerAttendances(rows db.Rows) ([]PlayerAttendance, error) {
 	}
 
 	return playerAttendances, nil
+}
+
+func getPlayersWithAttendancesFromMap(
+	playersWithAttendanceMap map[uint]*PlayerWithAttendances,
+) []PlayerWithAttendances {
+	playersWithAttendances := []PlayerWithAttendances{}
+	for _, playerWithAttendance := range playersWithAttendanceMap {
+		playersWithAttendances = append(playersWithAttendances, *playerWithAttendance)
+	}
+
+	return playersWithAttendances
 }

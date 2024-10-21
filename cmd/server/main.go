@@ -11,6 +11,7 @@ import (
 	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
 	"github.com/spie/fskick/internal/server"
+	"github.com/spie/fskick/internal/streaks"
 	"github.com/spie/fskick/internal/views"
 	"github.com/spie/fskick/migrations"
 )
@@ -45,6 +46,8 @@ func main() {
 	playersRepository := players.NewPlayerRepository(dbHandler)
 	playersManager := players.NewManager(playersRepository)
 
+	streaksManager := streaks.NewManager(attendanceRepository)
+
 	gamesViews := server.NewGamesViews()
 	gamesViews.SeasonsTable = views.NewSeasonTable()
 	gamesViews.PlayersTable = views.NewPlayersTable()
@@ -56,6 +59,10 @@ func main() {
 
 	seasonsController := server.NewSeasonsController(seasonManager)
 
+	streaksViews := server.NewStreaksViews()
+	streaksViews.StreaksPage = views.NewStreaksPage()
+	streaksController := server.NewStreaksController(streaksManager, streaksViews)
+
 	imprintView := views.NewImprintView()
 	imprintController := server.NewImprintController(cfg.ImprintText, imprintView)
 
@@ -64,12 +71,14 @@ func main() {
 	s.Get("/", gamesController.SeasonsTable)
 	s.Get("/players", gamesController.PlayersTable)
 	s.Get("/players/{player}", gamesController.PlayerInfo)
+	s.Get("/streaks", streaksController.StreaksPage)
 	s.Get("/imprint", imprintController.Imprint)
 
 	s.Get("/table/seasons", gamesController.SeasonsTableUpdate)
 	s.Get("/table/players", gamesController.PlayersTableUpdate)
 	s.Get("/table/players/{player}", gamesController.PlayersTableUpdate)
 	s.Get("/table/players/{player}/team", gamesController.FavoriteTeamUpdate)
+	s.Get("/streaks/current", streaksController.CurrentStreaks)
 
 	s.Get("/api/seasons", seasonsController.GetSeasons)
 	s.Get("/api/seasons/table", gamesController.GetSeasonsTable)

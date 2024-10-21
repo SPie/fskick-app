@@ -1,0 +1,63 @@
+package templates
+
+import (
+    "fmt"
+    "strconv"
+
+    "github.com/spie/fskick/internal/streaks"
+)
+
+templ StreaksPage(longestWinStreak, longestLosingStreak streaks.Streak, currentStreaks []streaks.Streak) {
+    @layout() {
+        <h2 class="text-center text-md md:text-2xl font-bold">
+            Streaks
+        </h2>
+
+        <div class="mx-auto w-4/5">
+          <div class="my-5">
+            <h3 class="text-left text-sm md:text-xl font-bold">Longest Streaks</h3>
+
+            <div class="my-5">
+                <div class="my-2">
+                    <span class="font-bold">Wins:</span> <a class="underline" href={templ.URL(fmt.Sprintf("/players/%s", longestWinStreak.Player.UUID))}>{longestWinStreak.Player.Name}</a> {strconv.Itoa(longestWinStreak.Number)} won games
+                </div>
+                <div class="my-2">
+                    <span class="font-bold">Losses:</span> <a class="underline" href={templ.URL(fmt.Sprintf("/players/%s", longestLosingStreak.Player.UUID))}>{longestLosingStreak.Player.Name}</a> {strconv.Itoa(longestLosingStreak.Number)} lost games
+                </div>
+            </div>
+          </div>
+
+          <div class="my-5">
+            <h3 class="text-left text-sm md:text-xl font-bold">Current Streaks</h3>
+                <label class="flex items-center relative w-max cursor-pointer select-none py-5">
+                  <input
+                      type="checkbox"
+                      name="win"
+                      class="appearance-none transition-colors cursor-pointer w-14 h-7 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-blue-500 bg-red checked:bg-green"
+                      hx-get="/streaks/current"
+                      hx-target="#current-streaks"
+                      checked="checked"
+                  />
+                  <span class="absolute font-medium text-xs uppercase right-1 text-white"> L </span>
+                  <span class="absolute font-medium text-xs uppercase right-8 text-white"> W </span>
+                  <span class="w-7 h-7 right-7 absolute rounded-full transform transition-transform bg-gray-200" />
+                </label>
+                <ul id="current-streaks" class="my-5">
+                    for _, streak := range currentStreaks {
+                        <li class="my-3">
+                            <a class="underline" href={templ.URL(fmt.Sprintf("/players/%s", streak.Player.UUID))}>{streak.Player.Name}</a> {strconv.Itoa(streak.Number)} games
+                        </li>
+                    }
+                </ul>
+            <div>
+            </div>
+          </div>
+
+          <style>
+            input:checked ~ span:last-child {
+              --tw-translate-x: 1.75rem; /* translate-x-7 */
+            }
+          </style>
+        </div>
+    }
+}
