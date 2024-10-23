@@ -1,5 +1,5 @@
 .env*
 /data
 *templ.go
-static/css/tailwind.css
+cmd/server/static/css/tailwind.css
 tmp

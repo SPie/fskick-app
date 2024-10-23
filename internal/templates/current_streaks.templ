@@ -1,0 +1,18 @@
+package templates
+
+import (
+    "fmt"
+    "strconv"
+
+    "github.com/spie/fskick/internal/streaks"
+)
+
+templ CurrentStreaks(currentStreaks []streaks.Streak) {
+    <ul id="current-streaks" class="my-5">
+        for _, streak := range currentStreaks {
+            <li class="my-3">
+                <a class="underline" href={templ.URL(fmt.Sprintf("/players/%s", streak.Player.UUID))}>{streak.Player.Name}</a> {strconv.Itoa(streak.Number)} games
+            </li>
+        }
+    </ul>
+}

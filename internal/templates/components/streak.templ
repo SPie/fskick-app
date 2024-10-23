@@ -1,10 +1,17 @@
 package components
 
 import (
+    "strconv"
+
     "github.com/spie/fskick/internal/games"
+    "github.com/spie/fskick/internal/streaks"
 )
 
-templ Streak(attendances []games.Attendance) {
+templ Streak(
+    attendances []games.Attendance,
+    longestWinningStreak streaks.Streak,
+    longestLosingStreak streaks.Streak,
+) {
     <div class="my-5">
         <h3 class="text-left text-sm md:text-xl font-bold">Streak</h3>
 
@@ -13,6 +20,19 @@ templ Streak(attendances []games.Attendance) {
                 for _, attendance := range getAttendancesForStreak(attendances) {
                     <span class={templ.Class("border-1 inline-block rounded-full w-8 h-8 " + getStreakColor(attendance))} />
                 }
+            </div>
+        </div>
+
+        <div class="my-5">
+            <h4 class="text-left font-bold">Longest Streaks</h4>
+
+            <div class="my-3 px-6">
+                <div class="my-2">
+                    {strconv.Itoa(longestWinningStreak.Number)} won games
+                </div>
+                <div class="my-2">
+                    {strconv.Itoa(longestLosingStreak.Number)} lost games
+                </div>
             </div>
         </div>
     </div>
