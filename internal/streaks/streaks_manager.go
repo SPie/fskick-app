@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/players"
 )
 
 type Manager struct {
@@ -15,76 +16,41 @@ func NewManager(attendanceRepository games.AttendanceRepository) Manager {
     return Manager{attendanceRepository: attendanceRepository}
 }
 
-func (manager Manager) GetLongestWiningStreak() (Streak, error) {
+func (manager Manager) GetLongestWinningAndLosingStreaks() (
+    winningStreak Streak,
+    logingStreak Streak,
+    err error,
+) {
     allPlayersWithAttendances, err := manager.attendanceRepository.GetAttendancesForAllPlayers()
     if err != nil {
-        return Streak{}, fmt.Errorf("get longest winning streak: %w", err)
+        return Streak{}, Streak{}, fmt.Errorf("get longest streak: %w", err)
     }
 
     longestWinningStreak := Streak{}
-    for _, playerWithAttendance := range allPlayersWithAttendances {
-        streak := Streak{Player: playerWithAttendance.Player, Number: 0}
-
-        number := 0
-        for _, attendance := range playerWithAttendance.Attendances {
-            if !attendance.Win {
-                if number > streak.Number {
-                    streak.Number = number
-                }
-
-                number = 0
-                continue
-            }
-
-            number++
-        }
-
-        if number > streak.Number {
-            streak.Number = number
-        }
-
-        if streak.Number > longestWinningStreak.Number {
-            longestWinningStreak = streak
-        }
-    }
-
-    return longestWinningStreak, nil
-}
-
-func (manager Manager) GetLongestLosingStreak() (Streak, error) {
-    allPlayersWithAttendances, err := manager.attendanceRepository.GetAttendancesForAllPlayers()
-    if err != nil {
-        return Streak{}, fmt.Errorf("get longest losing streak: %w", err)
-    }
-
     longestLosingStreak := Streak{}
     for _, playerWithAttendance := range allPlayersWithAttendances {
-        streak := Streak{Player: playerWithAttendance.Player, Number: 0}
+        winningStreak := GetLongestStreakForPlayer(
+            playerWithAttendance.Player,
+            playerWithAttendance.Attendances,
+            true,
+        )
 
-        number := 0
-        for _, attendance := range playerWithAttendance.Attendances {
-            if attendance.Win {
-                if number > streak.Number {
-                    streak.Number = number
-                }
-
-                number = 0
-                continue
-            }
-
-            number++
+        if winningStreak.Number > longestWinningStreak.Number {
+            longestWinningStreak = winningStreak
         }
 
-        if number > streak.Number {
-            streak.Number = number
-        }
+        losingStreak := GetLongestStreakForPlayer(
+            playerWithAttendance.Player,
+            playerWithAttendance.Attendances,
+            false,
+        )
 
-        if streak.Number > longestLosingStreak.Number {
-            longestLosingStreak = streak
+        if losingStreak.Number > longestLosingStreak.Number {
+            longestLosingStreak = losingStreak
         }
     }
 
-    return longestLosingStreak, nil
+    return longestWinningStreak, longestLosingStreak, nil
 }
 
 func (manager Manager) GetCurrentStreaks(win bool) ([]Streak, error) {
@@ -124,4 +90,28 @@ func (manager Manager) GetCurrentStreaks(win bool) ([]Streak, error) {
     })
 
     return currentStreaks, nil
+}
+
+func GetLongestStreakForPlayer(player players.Player, attendances []games.Attendance, win bool) Streak {
+    streak := Streak{Player: player, Number: 0}
+
+    number := 0
+    for _, attendance := range attendances {
+        if attendance.Win !=  win {
+            if number > streak.Number {
+                streak.Number = number
+            }
+
+            number = 0
+            continue
+        }
+
+        number++
+    }
+
+    if number > streak.Number {
+        streak.Number = number
+    }
+
+    return streak
 }

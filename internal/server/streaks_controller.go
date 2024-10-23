@@ -29,13 +29,8 @@ func NewStreaksController(streaksManager streaks.Manager, views StreaksViews) St
 }
 
 func (controller StreaksController) StreaksPage(res http.ResponseWriter, req *http.Request) {
-	longestWiningStreak, err := controller.streaksManager.GetLongestWiningStreak()
-	if err != nil {
-		handleInternalServerError(res, err)
-		return
-	}
-
-	longestLosingStreak, err := controller.streaksManager.GetLongestLosingStreak()
+	longestWiningStreak, longestLosingStreak, err := controller.streaksManager.
+		GetLongestWinningAndLosingStreaks()
 	if err != nil {
 		handleInternalServerError(res, err)
 		return

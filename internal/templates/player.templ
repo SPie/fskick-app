@@ -5,12 +5,15 @@ import (
 
     "github.com/spie/fskick/internal/games"
     "github.com/spie/fskick/internal/templates/components"
+    "github.com/spie/fskick/internal/streaks"
 )
 
 templ Player(
     playerStats games.PlayerStats,
     gamesCount int,
     lastAttendances []games.Attendance,
+    longestWinningStreak streaks.Streak,
+    longestLosingStreak streaks.Streak,
     favoriteTeam []games.PlayerStats,
 ) {
     @layout() {
@@ -33,7 +36,7 @@ templ Player(
             </div>
           </div>
 
-          @components.Streak(lastAttendances)
+          @components.Streak(lastAttendances, longestWinningStreak, longestLosingStreak)
 
           @components.FavoriteTeam(playerStats.Player, favoriteTeam, playerStats.Games)
         </div>

@@ -55,7 +55,13 @@ func main() {
 	gamesViews.SeasonsTableUpdate = views.NewSeasonsTableUpdate()
 	gamesViews.PlayersTableUpdate = views.NewPlayersTableUpdate()
 	gamesViews.FavoriteTeamUpdate = views.NewFavoriteTeamUpdate()
-	gamesController := server.NewGamesController(gamesManager, seasonManager, playersManager, gamesViews)
+	gamesController := server.NewGamesController(
+		gamesManager,
+		seasonManager,
+		playersManager,
+		streaksManager,
+		gamesViews,
+	)
 
 	seasonsController := server.NewSeasonsController(seasonManager)
 

@@ -8,6 +8,7 @@ import (
 	"github.com/spie/fskick/internal/games"
 	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
+	"github.com/spie/fskick/internal/streaks"
 	"github.com/spie/fskick/internal/views"
 )
 
@@ -28,6 +29,7 @@ type GamesController struct {
 	gamesManager   games.Manager
 	seasonsManager seasons.Manager
 	playersManager players.Manager
+	streaksManager streaks.Manager
 	views          GamesViews
 }
 
@@ -35,12 +37,14 @@ func NewGamesController(
 	gamesManager games.Manager,
 	seasonsManager seasons.Manager,
 	playersManager players.Manager,
+	streaksManager  streaks.Manager,
 	gamesViews GamesViews,
 ) GamesController {
 	return GamesController{
 		gamesManager:   gamesManager,
 		seasonsManager: seasonsManager,
 		playersManager: playersManager,
+		streaksManager: streaksManager,
 		views:          gamesViews,
 	}
 }
@@ -168,6 +172,8 @@ func (controller GamesController) PlayerInfo(res http.ResponseWriter, req *http.
 		playersTableData.playerStats[0],
 		playersTableData.gamesCount,
 		attendances,
+		streaks.GetLongestStreakForPlayer(playersTableData.playerStats[0].Player, attendances, true),
+		streaks.GetLongestStreakForPlayer(playersTableData.playerStats[0].Player, attendances, false),
 		teamPlayerStats,
 		req.Context(),
 		res,
