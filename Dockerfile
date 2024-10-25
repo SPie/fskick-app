@@ -24,7 +24,9 @@ WORKDIR /fskick-api/cmd/cli
 RUN set -x && \
     go generate && \
     go get -d -v . && \
-    CGO_ENABLED=1 GOOS=linux go build -o fskick .
+    CGO_ENABLED=1 GOOS=linux go build \
+        -ldflags="-X main.version=$(git describe)" \
+        -o fskick .
 
 FROM debian:latest
 
