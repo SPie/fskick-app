@@ -1,15 +1,18 @@
 package templates
 
+var version string = "development"
+
 templ layout() {
     @root() {
         <div class="bg-black text-gray-100">
             <div class="min-h-screen">
               <nav class="bg-gradient-to-b from-gray-900 to-gray-300 via-gray-600">
                 <div class="flex items-center">
-                  <div>
-                    <h1 class="lg:text-5xl text-2xl font-bold px-3 md:px-5 md:py-5">
+                  <div class="md:px-5 md:py-5 px-3">
+                    <h1 class="lg:text-5xl text-2xl font-bold">
                       <a href="/">FSKick</a>
                     </h1>
+                    <a class="text-xs" href="https://github.com/spie/fskick-app">{version}</a>
                   </div>
                   <div class="ml-10 flex items-baseline md:space-x-4 text-sm md:text-xl font-medium">
                     <a href="/" class="pr-3 py-2 rounded-md">Seasons</a>

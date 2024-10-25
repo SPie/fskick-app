@@ -14,7 +14,10 @@ WORKDIR /fskick-api/cmd/server
 RUN set -x && \
     go generate && \
     go get -d -v . && \
-    CGO_ENABLED=1 GOOS=linux go build -a -o server .
+    CGO_ENABLED=1 GOOS=linux go build \
+        -a \
+        -ldflags="-X github.com/spie/fskick/internal/templates.version=$(git describe)" \
+        -o server .
 
 WORKDIR /fskick-api/cmd/cli
 
