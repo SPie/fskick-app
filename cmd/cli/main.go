@@ -12,6 +12,8 @@ import (
 	"github.com/spie/fskick/migrations"
 )
 
+var version string = "development"
+
 func main() {
 	cfg, err := config.LoadCliConfig()
 	if err != nil {
@@ -67,7 +69,10 @@ func createCommands(seasonsManager seasons.Manager, gamesManager games.Manager, 
 	gamesCommands := commands.NewGamesCommand()
 	gamesCommands.AddCommand(createGame)
 
+	versionCommand := commands.NewVersionCommand(version)
+
 	rootCommand := commands.NewRootCommand()
+	rootCommand.AddCommand(versionCommand)
 	rootCommand.AddCommand(playersCommand)
 	rootCommand.AddCommand(seasonsCommand)
 	rootCommand.AddCommand(gamesCommands)

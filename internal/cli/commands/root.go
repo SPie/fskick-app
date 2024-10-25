@@ -1,7 +1,10 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+	"github.com/spie/fskick/internal/cli"
 )
 
 type Command interface {
@@ -42,4 +45,30 @@ func NewRootCommand() *rootCommand {
 	})}
 
 	return &rootCommand
+}
+
+type versionCommand struct {
+	command
+	version string
+}
+
+func NewVersionCommand(version string) *versionCommand {
+	versionCommand := versionCommand{version: version}
+
+	cc := newCommand(&cobra.Command{
+		Use: "version",
+		Short: "Show app version",
+		Long: "Show app version",
+		RunE:  versionCommand.showVersion,
+	})
+
+	versionCommand.command = cc
+
+	return &versionCommand
+}
+
+func (versionCommand *versionCommand) showVersion(cmd *cobra.Command, _ []string) error {
+	cli.Print(fmt.Sprintf("%s", versionCommand.version))
+
+	return nil
 }
