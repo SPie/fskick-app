@@ -6,8 +6,8 @@ COPY . .
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && \
-    npm install --save-dev tailwindcss && \
-    go install github.com/a-h/templ/cmd/templ@latest
+    npm install --save-dev tailwindcss@3.4.17 && \
+    go install github.com/a-h/templ/cmd/templ@v0.2.793
 
 WORKDIR /fskick-api/cmd/server
 

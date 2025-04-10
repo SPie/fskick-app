@@ -179,6 +179,10 @@ func createPlayerStats(playerAttendances []PlayerAttendance, gamesCount int, max
 }
 
 func sortPlayerStats(playerStats []PlayerStats, sortName string) {
+	if len(playerStats) <= 1 {
+		return
+	}
+
 	sortFunc, positionFunc := getSortAndPositionFunc(playerStats, sortName)
 
 	sort.Slice(playerStats, sortFunc)
