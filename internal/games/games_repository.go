@@ -149,7 +149,7 @@ func (repository GamesRepository) CountForPlayer(player players.Player) (int, er
 func (repository GamesRepository) MaxGamesForSeason(season seasons.Season) (int, error) {
 	var maxGames int
 	row := repository.dbHandler.QueryRow(
-		`SELECT MAX(games_played) as max_games_played
+		`SELECT COALESCE(MAX(games_played), 0) as max_games_played
 		FROM (
 			SELECT COUNT(a.id) as games_played
 			FROM players p
@@ -172,7 +172,7 @@ func (repository GamesRepository) MaxGamesForSeason(season seasons.Season) (int,
 func (repository GamesRepository) MaxGames() (int, error) {
 	var maxGames int
 	row := repository.dbHandler.QueryRow(
-		`SELECT MAX(games_played) as max_games_played
+		`SELECT COALESCE(MAX(games_played), 0) as max_games_played
 		FROM (
 			SELECT COUNT(a.id) as games_played
 			FROM players p
@@ -199,7 +199,7 @@ func (repository GamesRepository) MaxGamesForPlayer(player players.Player) (int,
 			JOIn games g ON a.game_id = g.id
 			WHERE a.player_id = $1
 		)
-		SELECT MAX(games_played) AS max_games_played
+		SELECT COALESCE(MAX(games_played), 0) AS max_games_played
 		FROM (
 			SELECT p.id, COUNT(a.id) as games_played
 			FROM players p
@@ -218,31 +218,4 @@ func (repository GamesRepository) MaxGamesForPlayer(player players.Player) (int,
 	}
 
 	return maxGames, nil
-}
-
-func getGamesColumns() string {
-	return "id, uuid, created_at, updated_at, deleted_at, played_at"
-}
-
-func scanGames(rows db.Rows) ([]Game, error) {
-	var games []Game
-	for rows.Next() {
-		var game Game
-
-		err := rows.Scan(
-			&game.ID,
-			&game.UUID,
-			&game.CreatedAt,
-			&game.UpdatedAt,
-			&game.DeletedAt,
-			&game.PlayedAt,
-		)
-		if err != nil {
-			return []Game{}, fmt.Errorf("scan games: %w", err)
-		}
-
-		games = append(games, game)
-	}
-
-	return games, nil
 }
