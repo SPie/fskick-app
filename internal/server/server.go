@@ -23,7 +23,7 @@ func (server *Server) Get(route string, handler func(http.ResponseWriter, *http.
 }
 
 func (server *Server) HandleStatic(static embed.FS) {
-	server.mux.Handle("GET /static/*", http.StripPrefix("/static/", http.FileServerFS(static)))
+	server.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(static)))
 }
 
 func (server *Server) Run() error {
