@@ -1,8 +1,6 @@
 module github.com/spie/fskick
 
-go 1.22.0
-
-toolchain go1.22.6
+go 1.23.8
 
 require (
 	github.com/a-h/templ v0.2.747
@@ -21,7 +19,6 @@ require (
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 )
