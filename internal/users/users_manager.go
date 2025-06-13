@@ -15,7 +15,7 @@ type usersRepository interface {
 }
 
 type passwordService interface {
-    HashPassword(password []byte) []byte
+    HashPassword(password []byte) ([]byte, error)
 }
 
 type Manager struct {
@@ -45,10 +45,15 @@ func (manager Manager) CreateUserFromPlayer(
         return User{}, fmt.Errorf("get player for CreateUserFromPlayer: %w", err)
     }
 
+    hashedPassword, err := manager.passwordService.HashPassword([]byte(plaintextPassword))
+    if err != nil {
+        return User{}, fmt.Errorf("Hash password for create user from player: %w", err)
+    }
+
     user := User{
         Player: player,
         Email: email,
-        Password: string(manager.passwordService.HashPassword([]byte(plaintextPassword))),
+        Password: string(hashedPassword),
     }
 
     err = manager.usersRepository.CreateUser(&user)

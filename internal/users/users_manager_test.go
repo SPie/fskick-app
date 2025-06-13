@@ -36,10 +36,11 @@ func (mockPlayersManager mockPlayersManager) GetPlayerByName(name string) (playe
 
 type mockPasswordService struct {
 	hashedPassword []byte
+	err error
 }
 
-func (mockPasswordService mockPasswordService) HashPassword(password []byte) []byte {
-	return mockPasswordService.hashedPassword
+func (mockPasswordService mockPasswordService) HashPassword(password []byte) ([]byte, error) {
+	return mockPasswordService.hashedPassword, mockPasswordService.err
 }
 
 func TestCreateUserFromPlayer(t *testing.T) {
@@ -48,8 +49,7 @@ func TestCreateUserFromPlayer(t *testing.T) {
 		email             string
 		plaintextPassword string
 	}
-	tests := []struct {
-		name string
+	tests := map[string]struct {
 		args struct {
 			playerName        string
 			email             string
@@ -58,8 +58,7 @@ func TestCreateUserFromPlayer(t *testing.T) {
 		setupMocks func() Manager
 		assertions []func (t *testing.T, user User, err error)
 	}{
-		{
-			name: "successfully created user",
+		"successfully created user": {
 			args: args{
 				playerName:        "test_player",
 				email:             "test@example.com",
@@ -95,8 +94,7 @@ func TestCreateUserFromPlayer(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "player not found",
+		"player not found": {
 			args: args{
 				playerName:        "test_player",
 				email:             "test@example.com",
@@ -112,8 +110,7 @@ func TestCreateUserFromPlayer(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "with error on storing user",
+		"with error on storing user": {
 			args: args{
 				playerName:        "test_player",
 				email:             "test@example.com",
@@ -135,10 +132,30 @@ func TestCreateUserFromPlayer(t *testing.T) {
 				},
 			},
 		},
+		"with error on password hashing": {
+			args: args{
+				playerName:        "test_player",
+				email:             "test@example.com",
+				plaintextPassword: "password123",
+			},
+			setupMocks: func() Manager {
+				return Manager{
+					playersManager: mockPlayersManager{player: players.Player{}},
+					passwordService: mockPasswordService{err: errors.New("some password error")},
+				}
+			},
+			assertions: []func (t *testing.T, user User, err error) {
+				func (t *testing.T, user User, err error) {
+					assert.Zero(t, user)
+					assert.ErrorContains(t, err, "some password error")
+					assert.ErrorContains(t, err, "Hash password for create user from player: ")
+				},
+			},
+		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			manager := tt.setupMocks()
 
 			user, err := manager.CreateUserFromPlayer(

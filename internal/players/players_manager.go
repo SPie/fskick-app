@@ -8,11 +8,18 @@ import (
 
 type Team []Player
 
-type Manager struct {
-	playerRepository PlayerRepository
+type playerRepository interface {
+	CreatePlayer(player *Player) error
+	FindPlayerByUUID(uuid string) (Player, error)
+	FindPlayerByName(name string) (Player, error)
+	FindPlayersByNames(names []string) ([]Player, error)
 }
 
-func NewManager(playerRepository PlayerRepository) Manager {
+type Manager struct {
+	playerRepository playerRepository
+}
+
+func NewManager(playerRepository playerRepository) Manager {
 	return Manager{playerRepository: playerRepository}
 }
 
@@ -39,6 +46,15 @@ func (manager Manager) GetPlayerByUUID(uuid string) (Player, error) {
 	player, err := manager.playerRepository.FindPlayerByUUID(uuid)
 	if err != nil {
 		return Player{}, fmt.Errorf("get player by uuid: %w", err)
+	}
+
+	return player, nil
+}
+
+func (manager Manager) GetPlayerByName(name string) (Player, error) {
+	player, err := manager.playerRepository.FindPlayerByName(name)
+	if err != nil {
+		return Player{}, fmt.Errorf("get player by name: %w", err)
 	}
 
 	return player, nil
