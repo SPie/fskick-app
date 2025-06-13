@@ -18,3 +18,8 @@ type UsersRepository struct {
 func NewUsersRepository(dbHandler db.Handler) UsersRepository {
     return UsersRepository{dbHandler: dbHandler}
 }
+
+func (repo UsersRepository) CreateUser(user *User) error {
+    // TODO
+    return nil
+}
