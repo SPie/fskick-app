@@ -1,121 +1,130 @@
 package users
 
 import (
-	"context"
 	"database/sql"
 	"errors"
-	"regexp"
 	"testing"
 	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
+	"github.com/spie/fskick/internal/db"
+	"github.com/spie/fskick/internal/players"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
+type mockConnection struct {
+	executedQueries []struct {
+		query string
+		args []any
+	}
+	expectedResult sql.Result
+	expectedErr error
+}
+
+func (conn mockConnection) Query(query string, args ...any) (*sql.Rows, error) {
+	// TODO
+	return nil, nil
+}
+
+func (conn mockConnection) QueryRow(query string, args ...any) *sql.Row {
+	// TODO
+	return nil
+}
+
+func (conn *mockConnection) Exec(query string, args ...any) (sql.Result, error) {
+	conn.executedQueries = append(
+		conn.executedQueries,
+		struct {
+			query string
+			args []any
+		}{
+			query: query,
+			args: args,
+		},
+	)
+
+	return conn.expectedResult, conn.expectedErr
+}
+
+func (conn mockConnection) Begin() (*sql.Tx, error) {
+	// TODO
+	return nil, nil
+}
+
+func (conn mockConnection) Close() error {
+	// TODO
+	return nil
+}
+
 func TestUsersRepository_CreateUser(t *testing.T) {
-	type args struct {
-		name  string
-		email string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		mock    func(sqlmock.Sqlmock)
-		want    *User
-		wantErr bool
+	tests := map[string]struct {
+		user User
+		setUpMocks func () (UsersRepository, *mockConnection)
+		assertions []func (t *testing.T, user User, conn *mockConnection, err error)
 	}{
-		{
-			name: "Successful user creation",
-			args: args{
-				name:  "John Doe",
-				email: "john.doe@example.com",
+		"with user created": {
+			user: User{
+				Player: players.Player{
+					Model: db.Model{
+						ID: 23,
+						UUID: "uuid123",
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+					Name: "test_player",
+				},
+				Email: "email@example.com",
+				Password: "hashedpassword",
 			},
-			mock: func(mock sqlmock.Sqlmock) {
-				expectedUUID := uuid.NewString() // This will be the UUID we expect to be generated
-				createdAt := time.Now().Truncate(time.Millisecond)
-				updatedAt := createdAt
-
-				rows := sqlmock.NewRows([]string{"id", "uuid", "name", "email", "created_at", "updated_at"}).
-					AddRow(1, expectedUUID, "John Doe", "john.doe@example.com", createdAt, updatedAt)
-
-				mock.ExpectQuery(regexp.QuoteMeta(
-					`INSERT INTO users (uuid, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, name, email, created_at, updated_at`,
-				)).
-					WithArgs(sqlmock.AnyArg(), "John Doe", "john.doe@example.com", sqlmock.AnyArg(), sqlmock.AnyArg()).
-					WillReturnRows(rows)
+			setUpMocks: func () (UsersRepository, *mockConnection) {
+				conn := &mockConnection{}
+				return UsersRepository{conn: conn}, conn
 			},
-			want: &User{
-				ID:    1,
-				Name:  "John Doe",
-				Email: "john.doe@example.com",
-				// UUID, CreatedAt, UpdatedAt will be checked dynamically
+			assertions: []func (t *testing.T, user User, conn *mockConnection, err error) {
+				func(t *testing.T, user User, conn *mockConnection, err error) {
+					assert.Equal(
+						t,
+						"UPDATE players SET email = ?, password = ?, updated_at = ? WHERE id = ?",
+						conn.executedQueries[0].query,
+					)
+					assert.Equal(t, "email@example.com", conn.executedQueries[0].args[0])
+					assert.Equal(t, "hashedpassword", conn.executedQueries[0].args[1])
+					assert.Equal(t, uint(23), conn.executedQueries[0].args[3])
+				},
 			},
-			wantErr: false,
 		},
-		{
-			name: "Error on scanning the queried row",
-			args: args{
-				name:  "Jane Smith",
-				email: "jane.smith@example.com",
+		"with error on update": {
+			user: User{
+				Player: players.Player{
+					Model: db.Model{
+						ID: 23,
+						UUID: "uuid123",
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+					Name: "test_player",
+				},
+				Email: "email@example.com",
+				Password: "hashedpassword",
 			},
-			mock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta(
-					`INSERT INTO users (uuid, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, name, email, created_at, updated_at`,
-				)).
-					WithArgs(sqlmock.AnyArg(), "Jane Smith", "jane.smith@example.com", sqlmock.AnyArg(), sqlmock.AnyArg()).
-					WillReturnError(sql.ErrNoRows) // Simulate a scan error like no rows found
+			setUpMocks: func () (UsersRepository, *mockConnection) {
+				conn := &mockConnection{expectedErr: errors.New("some db error")}
+				return UsersRepository{conn: conn}, conn
 			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "Error on inserting the user (simulating UUID error by DB constraint)",
-			args: args{
-				name:  "Bob Johnson",
-				email: "bob.johnson@example.com",
+			assertions: []func (t *testing.T, user User, conn *mockConnection, err error) {
+				func(t *testing.T, user User, conn *mockConnection, err error) {
+					assert.ErrorContains(t, err, "Error update player to create user")
+				},
 			},
-			mock: func(mock sqlmock.Sqlmock) {
-				mock.ExpectQuery(regexp.QuoteMeta(
-					`INSERT INTO users (uuid, name, email, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, name, email, created_at, updated_at`,
-				)).
-					WithArgs(sqlmock.AnyArg(), "Bob Johnson", "bob.johnson@example.com", sqlmock.AnyArg(), sqlmock.AnyArg()).
-					WillReturnError(errors.New("db: unique constraint violation on uuid")) // Simulate a DB error related to UUID
-			},
-			want:    nil,
-			wantErr: true,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db, mock, err := sqlmock.New()
-			require.NoError(t, err)
-			defer db.Close()
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			usersRepository, conn := tt.setUpMocks()
+			err := usersRepository.CreateUser(&tt.user)
 
-			r := NewUsersRepository(db)
-
-			tt.mock(mock)
-
-			got, err := r.CreateUser(context.Background(), tt.args.name, tt.args.email)
-
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.Nil(t, got)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, got)
-				assert.Equal(t, tt.want.ID, got.ID)
-				assert.Equal(t, tt.want.Name, got.Name)
-				assert.Equal(t, tt.want.Email, got.Email)
-				assert.NotEmpty(t, got.UUID)
-				assert.False(t, got.CreatedAt.IsZero())
-				assert.False(t, got.UpdatedAt.IsZero())
-				assert.Equal(t, got.CreatedAt, got.UpdatedAt)
-
-				// Ensure that the mock expectations were met
-				assert.NoError(t, mock.ExpectationsWereMet())
+			for _, assertion := range tt.assertions {
+				assertion(t, tt.user, conn, err)
 			}
 		})
 	}

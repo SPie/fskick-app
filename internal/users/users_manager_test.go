@@ -106,7 +106,24 @@ func TestCreateUserFromPlayer(t *testing.T) {
 			assertions: []func (t *testing.T, user User, err error) {
 				func (t *testing.T, user User, err error) {
 					assert.Zero(t, user)
-					assert.ErrorIs(t, err, players.ErrPlayerNotFound)
+					assert.ErrorContains(t, err, "Player test_player not found")
+				},
+			},
+		},
+		"error on player retrieve": {
+			args: args{
+				playerName:        "test_player",
+				email:             "test@example.com",
+				plaintextPassword: "password123",
+			},
+			setupMocks: func() Manager {
+				return Manager{playersManager: mockPlayersManager{err: errors.New("some error")}}
+			},
+			assertions: []func (t *testing.T, user User, err error) {
+				func (t *testing.T, user User, err error) {
+					assert.Zero(t, user)
+					assert.ErrorContains(t, err, "Get player for CreateUserFromPlayer")
+					assert.ErrorContains(t, err, "some error")
 				},
 			},
 		},

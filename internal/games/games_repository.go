@@ -18,11 +18,11 @@ type Game struct {
 }
 
 type GamesRepository struct {
-	dbHandler db.Handler
+	conn db.Connection
 }
 
-func NewGamesRepository(dbHandler db.Handler) GamesRepository {
-	return GamesRepository{dbHandler: dbHandler}
+func NewGamesRepository(conn db.Connection) GamesRepository {
+	return GamesRepository{conn: conn}
 }
 
 func (repository GamesRepository) CreateGame(game *Game, attendances []Attendance) error {
@@ -36,7 +36,7 @@ func (repository GamesRepository) CreateGame(game *Game, attendances []Attendanc
 	game.CreatedAt = now
 	game.UpdatedAt = now
 
-	tx, err := repository.dbHandler.Begin()
+	tx, err := repository.conn.Begin()
 	if err != nil {
 		return fmt.Errorf("begin transaction for insert game: %w", err)
 	}
@@ -105,7 +105,7 @@ func (repository GamesRepository) CreateGame(game *Game, attendances []Attendanc
 
 func (repository GamesRepository) Count() (int, error) {
 	var count int
-	err := repository.dbHandler.
+	err := repository.conn.
 		QueryRow("SELECT COUNT(*) FROM games").
 		Scan(&count)
 	if err != nil {
@@ -118,7 +118,7 @@ func (repository GamesRepository) Count() (int, error) {
 func (repository GamesRepository) CountForSeason(season seasons.Season) (int, error) {
 	var count int
 
-	err := repository.dbHandler.
+	err := repository.conn.
 		QueryRow("SELECT COUNT(*) FROM games WHERE season_id = $1", season.ID).
 		Scan(&count)
 	if err != nil {
@@ -130,7 +130,7 @@ func (repository GamesRepository) CountForSeason(season seasons.Season) (int, er
 
 func (repository GamesRepository) CountForPlayer(player players.Player) (int, error) {
 	var count int
-	err := repository.dbHandler.
+	err := repository.conn.
 		QueryRow(
 			`SELECT COUNT(*)
 			FROM games g
@@ -148,7 +148,7 @@ func (repository GamesRepository) CountForPlayer(player players.Player) (int, er
 
 func (repository GamesRepository) MaxGamesForSeason(season seasons.Season) (int, error) {
 	var maxGames int
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		`SELECT COALESCE(MAX(games_played), 0) as max_games_played
 		FROM (
 			SELECT COUNT(a.id) as games_played
@@ -171,7 +171,7 @@ func (repository GamesRepository) MaxGamesForSeason(season seasons.Season) (int,
 
 func (repository GamesRepository) MaxGames() (int, error) {
 	var maxGames int
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		`SELECT COALESCE(MAX(games_played), 0) as max_games_played
 		FROM (
 			SELECT COUNT(a.id) as games_played
@@ -192,7 +192,7 @@ func (repository GamesRepository) MaxGames() (int, error) {
 
 func (repository GamesRepository) MaxGamesForPlayer(player players.Player) (int, error) {
 	var maxGames int
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		`WITH player_games AS (
 			SELECT g.id AS game_id, a.win
 			FROM attendances a

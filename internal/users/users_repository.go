@@ -1,6 +1,9 @@
 package users
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/players"
 )
@@ -12,14 +15,24 @@ type User struct {
 }
 
 type UsersRepository struct {
-    dbHandler db.Handler
+    conn db.Connection
 }
 
-func NewUsersRepository(dbHandler db.Handler) UsersRepository {
-    return UsersRepository{dbHandler: dbHandler}
+func NewUsersRepository(conn db.Connection) UsersRepository {
+    return UsersRepository{conn: conn}
 }
 
 func (repo UsersRepository) CreateUser(user *User) error {
-    // TODO
+    _, err := repo.conn.Exec(
+	"UPDATE players SET email = ?, password = ?, updated_at = ? WHERE id = ?",
+	user.Email,
+	user.Password,
+	time.Now(),
+	user.ID,
+    )
+    if err != nil {
+	return fmt.Errorf("Error update player to create user: %w", err)
+    }
+
     return nil
 }

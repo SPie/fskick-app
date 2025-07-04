@@ -1,6 +1,7 @@
 package users
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spie/fskick/internal/players"
@@ -32,6 +33,7 @@ func NewManager(
     return Manager{
         usersRepository: usersRepository,
         playersManager: playersManager,
+        passwordService: paspasswordService,
     }
 }
 
@@ -41,8 +43,11 @@ func (manager Manager) CreateUserFromPlayer(
     plaintextPassword string,
 ) (User, error) {
     player, err := manager.playersManager.GetPlayerByName(playerName)
+    if errors.Is(err, players.ErrPlayerNotFound) {
+        return User{}, fmt.Errorf("Player %s not found", playerName)
+    }
     if err != nil {
-        return User{}, fmt.Errorf("get player for CreateUserFromPlayer: %w", err)
+        return User{}, fmt.Errorf("Get player for CreateUserFromPlayer: %w", err)
     }
 
     hashedPassword, err := manager.passwordService.HashPassword([]byte(plaintextPassword))
