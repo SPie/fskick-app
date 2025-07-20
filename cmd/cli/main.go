@@ -7,8 +7,10 @@ import (
 	"github.com/spie/fskick/internal/config"
 	"github.com/spie/fskick/internal/db"
 	"github.com/spie/fskick/internal/games"
+	"github.com/spie/fskick/internal/passwords"
 	"github.com/spie/fskick/internal/players"
 	"github.com/spie/fskick/internal/seasons"
+	"github.com/spie/fskick/internal/users"
 	"github.com/spie/fskick/migrations"
 )
 
@@ -20,35 +22,45 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbHandler, err := db.OpenDbHandler(cfg.DbConfig)
+	conn, err := db.OpenDbConnection(cfg.DbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbHandler.Close()
+	defer conn.Close()
 
-	err = dbHandler.MigrateFS(migrations.FS, ".")
+	err = db.MigrateFS(conn, migrations.FS, ".")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	seasonsRepository := seasons.NewSeasonsRepository(dbHandler)
+	passwordService := passwords.NewPasswordService()
+
+	seasonsRepository := seasons.NewSeasonsRepository(conn)
 	seasonManager := seasons.NewManager(seasonsRepository)
 
-	gamesRepository := games.NewGamesRepository(dbHandler)
-	attendanceRepository := games.NewAttendanceRepository(dbHandler)
+	gamesRepository := games.NewGamesRepository(conn)
+	attendanceRepository := games.NewAttendanceRepository(conn)
 	gamesManager := games.NewManager(gamesRepository, attendanceRepository, seasonManager)
 
-	playersRepository := players.NewPlayerRepository(dbHandler)
+	playersRepository := players.NewPlayerRepository(conn)
 	playersManager := players.NewManager(playersRepository)
 
-	rootCommand := createCommands(seasonManager, gamesManager, playersManager)
+	usersRepository := users.NewUsersRepository(conn)
+	usersManager := users.NewManager(usersRepository, playersManager, passwordService)
+
+	rootCommand := createCommands(seasonManager, gamesManager, playersManager, usersManager)
 
 	if err := rootCommand.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func createCommands(seasonsManager seasons.Manager, gamesManager games.Manager, playersManager players.Manager) commands.Command {
+func createCommands(
+	seasonsManager seasons.Manager,
+	gamesManager games.Manager,
+	playersManager players.Manager,
+	usersManager users.Manager,
+) commands.Command {
 	createPlayer := commands.NewCreatePlayerCommand(playersManager)
 	getPlayers := commands.NewGetPlayersCommand(gamesManager)
 	playersCommand := commands.NewPlayersCommand()
@@ -69,6 +81,10 @@ func createCommands(seasonsManager seasons.Manager, gamesManager games.Manager, 
 	gamesCommands := commands.NewGamesCommand()
 	gamesCommands.AddCommand(createGame)
 
+	createUserFromPlayer := commands.NewCreateUserFromPlayerCommand(usersManager)
+	usersCommand := commands.NewUsersCommand()
+	usersCommand.AddCommand(createUserFromPlayer)
+
 	versionCommand := commands.NewVersionCommand(version)
 
 	rootCommand := commands.NewRootCommand()
@@ -76,6 +92,7 @@ func createCommands(seasonsManager seasons.Manager, gamesManager games.Manager, 
 	rootCommand.AddCommand(playersCommand)
 	rootCommand.AddCommand(seasonsCommand)
 	rootCommand.AddCommand(gamesCommands)
+	rootCommand.AddCommand(usersCommand)
 
 	return rootCommand
 }

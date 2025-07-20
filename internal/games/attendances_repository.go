@@ -1,6 +1,7 @@
 package games
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/spie/fskick/internal/db"
@@ -27,17 +28,17 @@ type PlayerWithAttendances struct {
 }
 
 type AttendanceRepository struct {
-	dbHandler db.Handler
+	conn db.Connection
 }
 
-func NewAttendanceRepository(dbHandler db.Handler) AttendanceRepository {
-	return AttendanceRepository{dbHandler: dbHandler}
+func NewAttendanceRepository(conn db.Connection) AttendanceRepository {
+	return AttendanceRepository{conn: conn}
 }
 
 func (repository AttendanceRepository) CollectPlayerAttendancesForSeason(
 	season seasons.Season,
 ) ([]PlayerAttendance, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		fmt.Sprintf(
 			`SELECT
 			%s
@@ -65,7 +66,7 @@ func (repository AttendanceRepository) CollectPlayerAttendancesForSeason(
 }
 
 func (repository AttendanceRepository) CollectAllPlayerAttendances() ([]PlayerAttendance, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		fmt.Sprintf(
 			`SELECT
 			%s
@@ -93,7 +94,7 @@ func (repository AttendanceRepository) CollectAllPlayerAttendances() ([]PlayerAt
 func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 	player players.Player,
 ) ([]PlayerAttendance, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		fmt.Sprintf(
 			`WITH player_games AS (
 				SELECT g.id AS game_id, a.win
@@ -128,7 +129,7 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 }
 
 func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Player) ([]Attendance, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		`SELECT a.id, a.uuid, a.win, a.created_at
 		FROM attendances a
 		JOIN games g ON a.game_id = g.id
@@ -161,7 +162,7 @@ func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Pl
 }
 
 func (repository AttendanceRepository) GetAttendancesForAllPlayers() ([]PlayerWithAttendances, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		`SELECT p.id, p.uuid, p.name, p.created_at, a.id, a.uuid, a.win, a.created_at
 		FROM players p
 		JOIN attendances a ON p.id = a.player_id
@@ -216,7 +217,7 @@ func getPlayerAttendanceColumns() string {
 		SUM(CASE WHEN a.win THEN 1 ELSE 0 END) as wins`
 }
 
-func scanPlayerAttendances(rows db.Rows) ([]PlayerAttendance, error) {
+func scanPlayerAttendances(rows *sql.Rows) ([]PlayerAttendance, error) {
 	var playerAttendances []PlayerAttendance
 	for rows.Next() {
 		var playerAttendance PlayerAttendance

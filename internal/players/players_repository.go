@@ -1,6 +1,7 @@
 package players
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -18,12 +19,12 @@ var (
 )
 
 type PlayerRepository struct {
-	dbHandler db.Handler
+	conn db.Connection
 }
 
-func NewPlayerRepository(dbHandler db.Handler) PlayerRepository {
+func NewPlayerRepository(conn db.Connection) PlayerRepository {
 	return PlayerRepository{
-		dbHandler: dbHandler,
+		conn: conn,
 	}
 }
 
@@ -36,7 +37,7 @@ func (repository PlayerRepository) CreatePlayer(player *Player) error {
 	player.CreatedAt = time.Now()
 	player.UpdatedAt = time.Now()
 
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		`INSERT INTO players (uuid, name, created_at, updated_at, deleted_at)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`,
@@ -55,7 +56,7 @@ func (repository PlayerRepository) CreatePlayer(player *Player) error {
 }
 
 func (repository PlayerRepository) FindPlayerByUUID(uuid string) (Player, error) {
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		fmt.Sprintf(
 			`SELECT %s
 			FROM players
@@ -74,7 +75,7 @@ func (repository PlayerRepository) FindPlayerByUUID(uuid string) (Player, error)
 }
 
 func (repository PlayerRepository) FindPlayerByName(name string) (Player, error) {
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		fmt.Sprintf(
 			`SELECT %s
 			FROM players
@@ -93,7 +94,7 @@ func (repository PlayerRepository) FindPlayerByName(name string) (Player, error)
 }
 
 func (repository PlayerRepository) FindPlayersByNames(names []string) ([]Player, error) {
-	rows, err := repository.dbHandler.Query(
+	rows, err := repository.conn.Query(
 		fmt.Sprintf(
 			`SELECT
 			%s
@@ -127,7 +128,7 @@ func getPlayerColumns() string {
 	`
 }
 
-func scanPlayer(row db.Row) (Player, error) {
+func scanPlayer(row *sql.Row) (Player, error) {
 	var player Player
 	err := row.Scan(
 		&player.ID,
@@ -143,7 +144,7 @@ func scanPlayer(row db.Row) (Player, error) {
 	return player, nil
 }
 
-func scanPlayers(rows db.Rows) ([]Player, error) {
+func scanPlayers(rows *sql.Rows) ([]Player, error) {
 	players := []Player{}
 	for rows.Next() {
 		var player Player

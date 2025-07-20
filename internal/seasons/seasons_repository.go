@@ -1,6 +1,7 @@
 package seasons
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -18,11 +19,11 @@ type Season struct {
 }
 
 type SeasonsRepository struct {
-	dbHandler db.Handler
+	conn db.Connection
 }
 
-func NewSeasonsRepository(dbHandler db.Handler) SeasonsRepository {
-	return SeasonsRepository{dbHandler: dbHandler}
+func NewSeasonsRepository(conn db.Connection) SeasonsRepository {
+	return SeasonsRepository{conn: conn}
 }
 
 func (repository SeasonsRepository) CreateSeason(season *Season) error {
@@ -34,7 +35,7 @@ func (repository SeasonsRepository) CreateSeason(season *Season) error {
 	season.CreatedAt = time.Now()
 	season.UpdatedAt = time.Now()
 
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		`INSERT INTO seasons (uuid, name, created_at, updated_at, deleted_at, active)
 		VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
 		season.UUID,
@@ -73,7 +74,7 @@ func (repository SeasonsRepository) FindSeasonByUuid(uuid string) (Season, error
 }
 
 func (repository SeasonsRepository) GetAll() ([]Season, error) {
-	rows, err := repository.dbHandler.Query(fmt.Sprintf(`SELECT %s FROM seasons`, getSeasonsColumns()))
+	rows, err := repository.conn.Query(fmt.Sprintf(`SELECT %s FROM seasons`, getSeasonsColumns()))
 	if err != nil {
 		return []Season{}, fmt.Errorf("query all seasons: %w", err)
 	}
@@ -97,7 +98,7 @@ func (repository SeasonsRepository) FindActiveSeason() (Season, error) {
 }
 
 func (repository SeasonsRepository) ActivateSeason(season *Season) error {
-	tx, err := repository.dbHandler.Begin()
+	tx, err := repository.conn.Begin()
 	if err != nil {
 		return fmt.Errorf("begin transaction in activate season: %w", err)
 	}
@@ -129,7 +130,7 @@ func getSeasonsColumns() string {
 }
 
 func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any) (Season, error) {
-	row := repository.dbHandler.QueryRow(
+	row := repository.conn.QueryRow(
 		fmt.Sprintf(
 			`SELECT %s
 			FROM seasons
@@ -148,7 +149,7 @@ func (repository SeasonsRepository) selectSeason(whereQuery string, args ...any)
 	return season, nil
 }
 
-func scanSeason(row db.Row) (Season, error) {
+func scanSeason(row *sql.Row) (Season, error) {
 	var season Season
 	err := row.Scan(
 		&season.ID,
@@ -165,7 +166,7 @@ func scanSeason(row db.Row) (Season, error) {
 	return season, nil
 }
 
-func scanSeasons(rows db.Rows) ([]Season, error) {
+func scanSeasons(rows *sql.Rows) ([]Season, error) {
 	var seasons []Season
 	for rows.Next() {
 		var season Season

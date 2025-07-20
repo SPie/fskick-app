@@ -25,25 +25,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbHandler, err := db.OpenDbHandler(cfg.DbConfig)
+	conn, err := db.OpenDbConnection(cfg.DbConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbHandler.Close()
+	defer conn.Close()
 
-	err = dbHandler.MigrateFS(migrations.FS, ".")
+	err = db.MigrateFS(conn, migrations.FS, ".")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	seasonsRepository := seasons.NewSeasonsRepository(dbHandler)
+	seasonsRepository := seasons.NewSeasonsRepository(conn)
 	seasonManager := seasons.NewManager(seasonsRepository)
 
-	gamesRepository := games.NewGamesRepository(dbHandler)
-	attendanceRepository := games.NewAttendanceRepository(dbHandler)
+	gamesRepository := games.NewGamesRepository(conn)
+	attendanceRepository := games.NewAttendanceRepository(conn)
 	gamesManager := games.NewManager(gamesRepository, attendanceRepository, seasonManager)
 
-	playersRepository := players.NewPlayerRepository(dbHandler)
+	playersRepository := players.NewPlayerRepository(conn)
 	playersManager := players.NewManager(playersRepository)
 
 	streaksManager := streaks.NewManager(attendanceRepository)
