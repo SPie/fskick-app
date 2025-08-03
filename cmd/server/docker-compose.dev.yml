@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: cmd/server/Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../:/app
+    command: air -c cmd/server/.air.toml

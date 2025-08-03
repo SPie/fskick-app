@@ -1,0 +1,26 @@
+# Use a Golang base image for the development environment
+FROM golang:1.23.8
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install system dependencies for tailwindcss
+RUN apt-get update && apt-get install -y curl
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g tailwindcss@3.4.17
+
+# Install Go tools for live reloading and templating
+RUN go install github.com/air-verse/air@v1.61.7
+RUN go install github.com/a-h/templ/cmd/templ@v0.2.747
+
+# Copy Go module files and download dependencies first to leverage Docker cache
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of your application source code into the container
+COPY . .
+
+# The CMD will be provided by docker-compose, but this is a reasonable default.
+# It assumes an .air.toml file is present to run the server.
+CMD ["air"]

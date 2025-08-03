@@ -1,0 +1,28 @@
+# .air.toml
+# Config file for air: https://github.com/cosmtrek/air
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Pre-build commands to generate templ files and tailwind css
+pre_cmd = ["go generate ./..."]
+# Command to build and run the go binary
+cmd = "go build -o ./tmp/main -buildvcs=false ./cmd/server"
+# The binary to run
+bin = "tmp/main"
+
+# Files and directories to watch
+include_ext = ["go", "templ", "css"]
+exclude_dir = ["tmp", "vendor", "node_modules"]
+
+[log]
+# Show log time
+time = true
+
+[misc]
+# Delete tmp folder on start
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
