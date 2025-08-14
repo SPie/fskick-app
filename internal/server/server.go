@@ -22,6 +22,10 @@ func (server *Server) Get(route string, handler func(http.ResponseWriter, *http.
 	server.mux.HandleFunc(fmt.Sprintf("GET %s", route), handler)
 }
 
+func (server *Server) Post(route string, handler func(http.ResponseWriter, *http.Request)) {
+	server.mux.HandleFunc(fmt.Sprintf("POST %s", route), handler)
+}
+
 func (server *Server) HandleStatic(static embed.FS) {
 	server.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(static)))
 }

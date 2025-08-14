@@ -1,0 +1,45 @@
+package templates
+
+templ SignInPage(email string) {
+    @layout() {
+        <h2 class="text-center text-md md:text-2xl font-bold">
+            Sign In
+        </h2>
+        <form hx-post="/users/auth" hx-target="this" hx-swap="outerHTML" hx-redirect="/" class="flex flex-col gap-4 mt-8 w-full max-w-sm mx-auto">
+            <div class="form-control grid grid-cols-[100px_1fr] items-center gap-4">
+                <label for="email" class="label">
+                    <span class="label-text">Email</span>
+                </label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    class="input input-bordered w-full text-gray-900 placeholder-gray-400"
+                    value={email}
+                    required
+                />
+            </div>
+            <div class="form-control grid grid-cols-[100px_1fr] items-center gap-4">
+                <label for="password" class="label">
+                    <span class="label-text">Password</span>
+                </label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="********"
+                    class="input input-bordered w-full text-gray-900 placeholder-gray-400"
+                    value=""
+                    required
+                />
+            </div>
+            <div class="form-control mt-6">
+                <button type="submit" class="btn btn-primary px-4 py-2 rounded-md">Sign In</button>
+            </div>
+            <div class="text-center text-sm">
+                <a href="/forgot-password" class="link link-hover">Forgot password?</a>
+            </div>
+        </form>
+    }
+}

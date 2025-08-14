@@ -72,6 +72,10 @@ func main() {
 	imprintView := views.NewImprintView()
 	imprintController := server.NewImprintController(cfg.ImprintText, imprintView)
 
+	usersViews := server.NewUsersViews()
+	usersViews.SignInPage = views.NewSignInPage()
+	usersController := server.NewUsersController(usersViews)
+
 	s := server.New(cfg.ApiHost)
 
 	s.Get("/", gamesController.SeasonsTable)
@@ -79,6 +83,7 @@ func main() {
 	s.Get("/players/{player}", gamesController.PlayerInfo)
 	s.Get("/streaks", streaksController.StreaksPage)
 	s.Get("/imprint", imprintController.Imprint)
+	s.Get("/users/auth", usersController.SignInPage)
 
 	s.Get("/table/seasons", gamesController.SeasonsTableUpdate)
 	s.Get("/table/players", gamesController.PlayersTableUpdate)
