@@ -22,6 +22,7 @@ func (view PlayerInfo) Render(
 	longestWinningStreak streaks.Streak,
 	longestLosingStreak streaks.Streak,
 	favoriteTeam []games.PlayerStats,
+	favoriteOponents []games.PlayerStats,
 	ctx context.Context,
 	w io.Writer,
 ) error {
@@ -32,5 +33,6 @@ func (view PlayerInfo) Render(
 		longestWinningStreak,
 		longestLosingStreak,
 		getFavoriteTeamOf5(favoriteTeam),
+		getFavoriteTeamOf5(favoriteOponents),
 	).Render(ctx, w)
 }

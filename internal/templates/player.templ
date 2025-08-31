@@ -15,6 +15,7 @@ templ Player(
     longestWinningStreak streaks.Streak,
     longestLosingStreak streaks.Streak,
     favoriteTeam []games.PlayerStats,
+    favoriteOponents []games.PlayerStats,
 ) {
     @layout() {
       <div>
@@ -39,6 +40,17 @@ templ Player(
           @components.Streak(lastAttendances, longestWinningStreak, longestLosingStreak)
 
           @components.FavoriteTeam(playerStats.Player, favoriteTeam, playerStats.Games)
+
+          <div class="my-5">
+              <h3 class="text-left text-sm md:text-xl font-bold">Favorite Oponents</h3>
+
+              @components.PlayerStatsTable(
+                  favoriteOponents,
+                  playerStats.Games,
+                  "pointsRatio",
+                  components.TableHtmxOptions{Endpoint: fmt.Sprintf("/table/players/%s/oponents", playerStats.Player.UUID)},
+              )
+          </div>
         </div>
       </div>
     }
