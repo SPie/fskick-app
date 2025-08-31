@@ -10,23 +10,23 @@ import (
 func TestPasswordService_HashPassword(t *testing.T) {
 	tests := map[string]struct {
 		plaintextPassword string
-		expectsErr bool
+		expectsErr        bool
 	}{
 		"successfully hashes a simple password": {
 			plaintextPassword: "supersecretpassword",
-			expectsErr: false,
+			expectsErr:        false,
 		},
 		"successfully hashes a password with special characters": {
 			plaintextPassword: "Pa$$w0rd!@#",
-			expectsErr: false,
+			expectsErr:        false,
 		},
 		"successfully hashes an empty password": {
 			plaintextPassword: "",
-			expectsErr: false,
+			expectsErr:        false,
 		},
 		"error on hashing 73-byte long password": {
 			plaintextPassword: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+={}|[]\\:;\"'<>,.?/~`",
-			expectsErr: true,
+			expectsErr:        true,
 		},
 	}
 

@@ -12,7 +12,7 @@ import (
 
 type mockUsersRepository struct {
 	updatedAt time.Time
-	err error
+	err       error
 }
 
 func (mockUserRepository mockUsersRepository) CreateUser(user *User) error {
@@ -27,7 +27,7 @@ func (mockUserRepository mockUsersRepository) CreateUser(user *User) error {
 
 type mockPlayersManager struct {
 	player players.Player
-	err error
+	err    error
 }
 
 func (mockPlayersManager mockPlayersManager) GetPlayerByName(name string) (players.Player, error) {
@@ -36,7 +36,7 @@ func (mockPlayersManager mockPlayersManager) GetPlayerByName(name string) (playe
 
 type mockPasswordService struct {
 	hashedPassword []byte
-	err error
+	err            error
 }
 
 func (mockPasswordService mockPasswordService) HashPassword(password []byte) ([]byte, error) {
@@ -56,7 +56,7 @@ func TestCreateUserFromPlayer(t *testing.T) {
 			plaintextPassword string
 		}
 		setupMocks func() Manager
-		assertions []func (t *testing.T, user User, err error)
+		assertions []func(t *testing.T, user User, err error)
 	}{
 		"successfully created user": {
 			args: args{
@@ -72,8 +72,8 @@ func TestCreateUserFromPlayer(t *testing.T) {
 					playersManager: mockPlayersManager{player: players.Player{
 						Name: "test_player",
 						Model: db.Model{
-							ID: 23,
-							UUID: "uuid1234",
+							ID:        23,
+							UUID:      "uuid1234",
 							CreatedAt: time.Date(2009, time.July, 28, 0, 0, 0, 0, time.UTC),
 							UpdatedAt: time.Date(2009, time.July, 28, 0, 0, 0, 0, time.UTC),
 						},
@@ -81,8 +81,8 @@ func TestCreateUserFromPlayer(t *testing.T) {
 					passwordService: mockPasswordService{hashedPassword: []byte("hashedpassword")},
 				}
 			},
-			assertions: []func (t *testing.T, user User, err error) {
-				func (t *testing.T, user User, err error) {
+			assertions: []func(t *testing.T, user User, err error){
+				func(t *testing.T, user User, err error) {
 					assert.Equal(t, uint(23), user.ID)
 					assert.Equal(t, "test@example.com", user.Email)
 					assert.Equal(t, "test_player", user.Name)
@@ -103,8 +103,8 @@ func TestCreateUserFromPlayer(t *testing.T) {
 			setupMocks: func() Manager {
 				return Manager{playersManager: mockPlayersManager{err: players.ErrPlayerNotFound}}
 			},
-			assertions: []func (t *testing.T, user User, err error) {
-				func (t *testing.T, user User, err error) {
+			assertions: []func(t *testing.T, user User, err error){
+				func(t *testing.T, user User, err error) {
 					assert.Zero(t, user)
 					assert.ErrorContains(t, err, "Player test_player not found")
 				},
@@ -119,8 +119,8 @@ func TestCreateUserFromPlayer(t *testing.T) {
 			setupMocks: func() Manager {
 				return Manager{playersManager: mockPlayersManager{err: errors.New("some error")}}
 			},
-			assertions: []func (t *testing.T, user User, err error) {
-				func (t *testing.T, user User, err error) {
+			assertions: []func(t *testing.T, user User, err error){
+				func(t *testing.T, user User, err error) {
 					assert.Zero(t, user)
 					assert.ErrorContains(t, err, "Get player for CreateUserFromPlayer")
 					assert.ErrorContains(t, err, "some error")
@@ -138,12 +138,12 @@ func TestCreateUserFromPlayer(t *testing.T) {
 					usersRepository: mockUsersRepository{
 						err: errors.New("some error"),
 					},
-					playersManager: mockPlayersManager{player: players.Player{}},
+					playersManager:  mockPlayersManager{player: players.Player{}},
 					passwordService: mockPasswordService{hashedPassword: []byte("hashedpassword")},
 				}
 			},
-			assertions: []func (t *testing.T, user User, err error) {
-				func (t *testing.T, user User, err error) {
+			assertions: []func(t *testing.T, user User, err error){
+				func(t *testing.T, user User, err error) {
 					assert.Zero(t, user)
 					assert.Error(t, err)
 				},
@@ -157,12 +157,12 @@ func TestCreateUserFromPlayer(t *testing.T) {
 			},
 			setupMocks: func() Manager {
 				return Manager{
-					playersManager: mockPlayersManager{player: players.Player{}},
+					playersManager:  mockPlayersManager{player: players.Player{}},
 					passwordService: mockPasswordService{err: errors.New("some password error")},
 				}
 			},
-			assertions: []func (t *testing.T, user User, err error) {
-				func (t *testing.T, user User, err error) {
+			assertions: []func(t *testing.T, user User, err error){
+				func(t *testing.T, user User, err error) {
 					assert.Zero(t, user)
 					assert.ErrorContains(t, err, "some password error")
 					assert.ErrorContains(t, err, "Hash password for create user from player: ")

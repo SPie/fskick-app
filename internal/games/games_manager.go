@@ -144,7 +144,7 @@ func (manager Manager) GetFellowPlayerStats(player players.Player, sort string) 
 
 	gamesCount, err := manager.gameRepository.CountForPlayer(player)
 	if err != nil {
-		return nil, fmt.Errorf("get player stats: %w", err)
+		return nil, fmt.Errorf("get player's games count: %w", err)
 	}
 
 	maxGamesCount, err := manager.gameRepository.MaxGamesForPlayer(player)
@@ -153,7 +153,28 @@ func (manager Manager) GetFellowPlayerStats(player players.Player, sort string) 
 	}
 
 	playerStats := createPlayerStats(playerAttendances, gamesCount, maxGamesCount)
+	sortPlayerStats(playerStats, sort)
 
+	return playerStats, nil
+}
+
+func (manager Manager) GetOponentPlayerStats(player players.Player, sort string) ([]PlayerStats, error) {
+	playerAttendances, err := manager.attendanceRepository.CollectOponentPlayerAttendances(player)
+	if err != nil {
+		return nil, fmt.Errorf("get oponent player stats: %w", err)
+	}
+
+	gamesCount, err := manager.gameRepository.CountForPlayer(player)
+	if err != nil {
+		return nil, fmt.Errorf("get player's games count: %w", err)
+	}
+
+	maxGamesCount, err := manager.gameRepository.MaxGamesForPlayer(player)
+	if err != nil {
+		return nil, fmt.Errorf("get player stats: %w", err)
+	}
+
+	playerStats := createPlayerStats(playerAttendances, gamesCount, maxGamesCount)
 	sortPlayerStats(playerStats, sort)
 
 	return playerStats, nil

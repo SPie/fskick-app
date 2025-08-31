@@ -8,7 +8,7 @@ import (
 )
 
 type StreaksViews struct {
-	StreaksPage views.StreaksPage
+	StreaksPage    views.StreaksPage
 	CurrentStreaks views.CurrentStreaks
 }
 
@@ -18,13 +18,13 @@ func NewStreaksViews() StreaksViews {
 
 type StreaksController struct {
 	streaksManager streaks.Manager
-	views StreaksViews
+	views          StreaksViews
 }
 
 func NewStreaksController(streaksManager streaks.Manager, views StreaksViews) StreaksController {
 	return StreaksController{
 		streaksManager: streaksManager,
-		views: views,
+		views:          views,
 	}
 }
 

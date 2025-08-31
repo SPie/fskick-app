@@ -128,6 +128,46 @@ func (repository AttendanceRepository) CollectFellowPlayerAttendances(
 	return playerAttendances, nil
 }
 
+func (repository AttendanceRepository) CollectOponentPlayerAttendances(
+	player players.Player,
+) ([]PlayerAttendance, error) {
+	rows, err := repository.conn.Query(
+		`WITH player_games AS (
+			SELECT g.id AS game_id, a.win
+			FROM attendances a
+			JOIN games g ON g.id = a.game_id
+			WHERE a.player_id = $1
+		)
+		SELECT
+			p.id,
+			p.uuid,
+			p.name,
+			p.created_at,
+			p.updated_at,
+			COUNT(a.id) AS games_played,
+			SUM(CASE WHEN a.win THEN 0 ELSE 1 END) as wins
+		FROM players p
+		JOIN attendances a ON p.id = a.player_id
+		JOIN games g ON g.id = a.game_id
+		JOIN player_games pg ON g.id = pg.game_id AND a.win != pg.win
+		WHERE p.id != $1
+		GROUP BY p.id
+		`,
+		player.ID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("collect oponent player attendances: %w", err)
+	}
+	defer rows.Close()
+
+	playerAttendances, err := scanPlayerAttendances(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scan row for collect oponent player attendances: %w", err)
+	}
+
+	return playerAttendances, nil
+}
+
 func (repository AttendanceRepository) GetAttendancesForPlayer(player players.Player) ([]Attendance, error) {
 	rows, err := repository.conn.Query(
 		`SELECT a.id, a.uuid, a.win, a.created_at

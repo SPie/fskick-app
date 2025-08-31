@@ -84,6 +84,7 @@ func main() {
 	s.Get("/table/players", gamesController.PlayersTableUpdate)
 	s.Get("/table/players/{player}", gamesController.PlayersTableUpdate)
 	s.Get("/table/players/{player}/team", gamesController.FavoriteTeamUpdate)
+	s.Get("/table/players/{player}/oponents", gamesController.FavoriteOponentsUpdate)
 	s.Get("/streaks/current", streaksController.CurrentStreaks)
 
 	s.Get("/api/seasons", seasonsController.GetSeasons)

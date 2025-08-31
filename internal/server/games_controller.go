@@ -13,12 +13,13 @@ import (
 )
 
 type GamesViews struct {
-	SeasonsTable       views.SeasonsTable
-	PlayersTable       views.PlayersTable
-	PlayerInfo         views.PlayerInfo
-	SeasonsTableUpdate views.SeasonsTableUpdate
-	PlayersTableUpdate views.PlayersTableUpdate
-	FavoriteTeamUpdate views.FavoriteTeamUpdate
+	SeasonsTable           views.SeasonsTable
+	PlayersTable           views.PlayersTable
+	PlayerInfo             views.PlayerInfo
+	SeasonsTableUpdate     views.SeasonsTableUpdate
+	PlayersTableUpdate     views.PlayersTableUpdate
+	FavoriteTeamUpdate     views.FavoriteTeamUpdate
+	FavoriteOponentsUpdate views.FavoriteOponentsUpdate
 }
 
 func NewGamesViews() GamesViews {
@@ -37,7 +38,7 @@ func NewGamesController(
 	gamesManager games.Manager,
 	seasonsManager seasons.Manager,
 	playersManager players.Manager,
-	streaksManager  streaks.Manager,
+	streaksManager streaks.Manager,
 	gamesViews GamesViews,
 ) GamesController {
 	return GamesController{
@@ -168,6 +169,15 @@ func (controller GamesController) PlayerInfo(res http.ResponseWriter, req *http.
 		return
 	}
 
+	oponentPlayerStats, err := controller.gamesManager.GetOponentPlayerStats(
+		playersTableData.playerStats[0].Player,
+		sort,
+	)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
 	err = controller.views.PlayerInfo.Render(
 		playersTableData.playerStats[0],
 		playersTableData.gamesCount,
@@ -175,6 +185,7 @@ func (controller GamesController) PlayerInfo(res http.ResponseWriter, req *http.
 		streaks.GetLongestStreakForPlayer(playersTableData.playerStats[0].Player, attendances, true),
 		streaks.GetLongestStreakForPlayer(playersTableData.playerStats[0].Player, attendances, false),
 		teamPlayerStats,
+		oponentPlayerStats,
 		req.Context(),
 		res,
 	)
@@ -208,6 +219,42 @@ func (controller GamesController) FavoriteTeamUpdate(res http.ResponseWriter, re
 	}
 
 	if err = controller.views.FavoriteTeamUpdate.Render(
+		teamPlayerStats,
+		gamesCount,
+		playerUuid,
+		sort,
+		req.Context(),
+		res,
+	); err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+}
+
+func (controller GamesController) FavoriteOponentsUpdate(res http.ResponseWriter, req *http.Request) {
+	playerUuid := req.PathValue("player")
+
+	player, err := controller.getPlayer(playerUuid)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	sort := getSort(req)
+
+	teamPlayerStats, err := controller.gamesManager.GetOponentPlayerStats(player, sort)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	gamesCount, err := controller.gamesManager.GetGamesCountForPlayer(player)
+	if err != nil {
+		handleInternalServerError(res, err)
+		return
+	}
+
+	if err = controller.views.FavoriteOponentsUpdate.Render(
 		teamPlayerStats,
 		gamesCount,
 		playerUuid,
