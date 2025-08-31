@@ -159,7 +159,7 @@ func (manager Manager) GetFellowPlayerStats(player players.Player, sort string) 
 }
 
 func (manager Manager) GetOponentPlayerStats(player players.Player, sort string) ([]PlayerStats, error) {
-	playerAttendances , err := manager.attendanceRepository.CollectOponentPlayerAttendances(player)
+	playerAttendances, err := manager.attendanceRepository.CollectOponentPlayerAttendances(player)
 	if err != nil {
 		return nil, fmt.Errorf("get oponent player stats: %w", err)
 	}

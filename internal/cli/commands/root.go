@@ -56,9 +56,9 @@ func NewVersionCommand(version string) *versionCommand {
 	versionCommand := versionCommand{version: version}
 
 	cc := newCommand(&cobra.Command{
-		Use: "version",
+		Use:   "version",
 		Short: "Show app version",
-		Long: "Show app version",
+		Long:  "Show app version",
 		RunE:  versionCommand.showVersion,
 	})
 

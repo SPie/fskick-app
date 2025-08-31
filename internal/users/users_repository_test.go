@@ -14,10 +14,10 @@ import (
 type mockConnection struct {
 	executedQueries []struct {
 		query string
-		args []any
+		args  []any
 	}
 	expectedResult sql.Result
-	expectedErr error
+	expectedErr    error
 }
 
 func (conn mockConnection) Query(query string, args ...any) (*sql.Rows, error) {
@@ -35,10 +35,10 @@ func (conn *mockConnection) Exec(query string, args ...any) (sql.Result, error) 
 		conn.executedQueries,
 		struct {
 			query string
-			args []any
+			args  []any
 		}{
 			query: query,
-			args: args,
+			args:  args,
 		},
 	)
 
@@ -57,29 +57,29 @@ func (conn mockConnection) Close() error {
 
 func TestUsersRepository_CreateUser(t *testing.T) {
 	tests := map[string]struct {
-		user User
-		setUpMocks func () (UsersRepository, *mockConnection)
-		assertions []func (t *testing.T, user User, conn *mockConnection, err error)
+		user       User
+		setUpMocks func() (UsersRepository, *mockConnection)
+		assertions []func(t *testing.T, user User, conn *mockConnection, err error)
 	}{
 		"with user created": {
 			user: User{
 				Player: players.Player{
 					Model: db.Model{
-						ID: 23,
-						UUID: "uuid123",
+						ID:        23,
+						UUID:      "uuid123",
 						CreatedAt: time.Now(),
 						UpdatedAt: time.Now(),
 					},
 					Name: "test_player",
 				},
-				Email: "email@example.com",
+				Email:    "email@example.com",
 				Password: "hashedpassword",
 			},
-			setUpMocks: func () (UsersRepository, *mockConnection) {
+			setUpMocks: func() (UsersRepository, *mockConnection) {
 				conn := &mockConnection{}
 				return UsersRepository{conn: conn}, conn
 			},
-			assertions: []func (t *testing.T, user User, conn *mockConnection, err error) {
+			assertions: []func(t *testing.T, user User, conn *mockConnection, err error){
 				func(t *testing.T, user User, conn *mockConnection, err error) {
 					assert.Equal(
 						t,
@@ -96,21 +96,21 @@ func TestUsersRepository_CreateUser(t *testing.T) {
 			user: User{
 				Player: players.Player{
 					Model: db.Model{
-						ID: 23,
-						UUID: "uuid123",
+						ID:        23,
+						UUID:      "uuid123",
 						CreatedAt: time.Now(),
 						UpdatedAt: time.Now(),
 					},
 					Name: "test_player",
 				},
-				Email: "email@example.com",
+				Email:    "email@example.com",
 				Password: "hashedpassword",
 			},
-			setUpMocks: func () (UsersRepository, *mockConnection) {
+			setUpMocks: func() (UsersRepository, *mockConnection) {
 				conn := &mockConnection{expectedErr: errors.New("some db error")}
 				return UsersRepository{conn: conn}, conn
 			},
-			assertions: []func (t *testing.T, user User, conn *mockConnection, err error) {
+			assertions: []func(t *testing.T, user User, conn *mockConnection, err error){
 				func(t *testing.T, user User, conn *mockConnection, err error) {
 					assert.ErrorContains(t, err, "Error update player to create user")
 				},

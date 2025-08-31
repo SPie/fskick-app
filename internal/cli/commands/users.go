@@ -14,9 +14,9 @@ type usersCommand struct {
 
 func NewUsersCommand() *usersCommand {
 	return &usersCommand{command: newCommand(&cobra.Command{
-		Use: "users",
+		Use:   "users",
 		Short: "Commands to handle users",
-		Long: "All commands handling users, like creating new users",
+		Long:  "All commands handling users, like creating new users",
 	})}
 }
 
@@ -29,11 +29,11 @@ func NewCreateUserFromPlayerCommand(userManager users.Manager) *createUserFromPl
 	createUserFromPlayerCommand := &createUserFromPlayerCommand{usersManager: userManager}
 
 	cc := &cobra.Command{
-		Use: "player [name] [email] [password]",
+		Use:   "player [name] [email] [password]",
 		Short: "Creates a new user for an existing player",
-		Long: "Creates a new user with a given email and password for a player with the given name",
-		Args: cobra.ExactArgs(3),
-		RunE: createUserFromPlayerCommand.createUser,
+		Long:  "Creates a new user with a given email and password for a player with the given name",
+		Args:  cobra.ExactArgs(3),
+		RunE:  createUserFromPlayerCommand.createUser,
 	}
 
 	createUserFromPlayerCommand.command = newCommand(cc)

@@ -9,7 +9,7 @@ import (
 
 type mockPlayerRepository struct {
 	player Player
-	err error
+	err    error
 }
 
 func (repo mockPlayerRepository) FindPlayerByName(name string) (Player, error) {
@@ -35,7 +35,7 @@ func TestPlayersManager_GetPlayerByName(t *testing.T) {
 	tests := map[string]struct {
 		playerName string
 		setupMocks func() Manager
-		assertions []func (t *testing.T, player Player, err error)
+		assertions []func(t *testing.T, player Player, err error)
 	}{
 		"with player found": {
 			playerName: "test_player",
@@ -43,7 +43,7 @@ func TestPlayersManager_GetPlayerByName(t *testing.T) {
 				playerRepository := mockPlayerRepository{
 					player: Player{
 						Model: db.Model{
-							ID: 23,
+							ID:   23,
 							UUID: "someuuid123",
 						},
 						Name: "test_player",
@@ -52,8 +52,8 @@ func TestPlayersManager_GetPlayerByName(t *testing.T) {
 
 				return NewManager(playerRepository)
 			},
-			assertions: []func (t *testing.T, player Player, err error) {
-				func (t *testing.T, player Player, err error) {
+			assertions: []func(t *testing.T, player Player, err error){
+				func(t *testing.T, player Player, err error) {
 					assert.Equal(t, "test_player", player.Name)
 					assert.Equal(t, uint(23), player.ID)
 					assert.Equal(t, "someuuid123", player.UUID)
@@ -70,8 +70,8 @@ func TestPlayersManager_GetPlayerByName(t *testing.T) {
 
 				return NewManager(playerRepository)
 			},
-			assertions: []func (t *testing.T, player Player, err error) {
-				func (t *testing.T, player Player, err error) {
+			assertions: []func(t *testing.T, player Player, err error){
+				func(t *testing.T, player Player, err error) {
 					assert.Zero(t, player)
 					assert.ErrorIs(t, err, ErrPlayerNotFound)
 					assert.ErrorContains(t, err, "get player by name: ")
@@ -92,5 +92,3 @@ func TestPlayersManager_GetPlayerByName(t *testing.T) {
 		})
 	}
 }
-
-

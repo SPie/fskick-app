@@ -13,12 +13,12 @@ import (
 )
 
 type GamesViews struct {
-	SeasonsTable       views.SeasonsTable
-	PlayersTable       views.PlayersTable
-	PlayerInfo         views.PlayerInfo
-	SeasonsTableUpdate views.SeasonsTableUpdate
-	PlayersTableUpdate views.PlayersTableUpdate
-	FavoriteTeamUpdate views.FavoriteTeamUpdate
+	SeasonsTable           views.SeasonsTable
+	PlayersTable           views.PlayersTable
+	PlayerInfo             views.PlayerInfo
+	SeasonsTableUpdate     views.SeasonsTableUpdate
+	PlayersTableUpdate     views.PlayersTableUpdate
+	FavoriteTeamUpdate     views.FavoriteTeamUpdate
 	FavoriteOponentsUpdate views.FavoriteOponentsUpdate
 }
 
@@ -38,7 +38,7 @@ func NewGamesController(
 	gamesManager games.Manager,
 	seasonsManager seasons.Manager,
 	playersManager players.Manager,
-	streaksManager  streaks.Manager,
+	streaksManager streaks.Manager,
 	gamesViews GamesViews,
 ) GamesController {
 	return GamesController{
